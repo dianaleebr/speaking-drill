@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speaking Drill</title>
+<!--
+================================================================================
+  Speaking Drill — 초등 영어 스피킹 드릴 웹앱  (단일 HTML 파일 · 서버 불필요)
+  ------------------------------------------------------------------------------
+  교사용 수정 가이드
+  ------------------------------------------------------------------------------
+  [1] 문장 추가 / 수정하기
+      - 아래 <script> 안의  const DRILL_DATA = { ... }  부분을 찾으세요.
+      - 급수별 배열(  "1": [ ... ]  ~  "6": [ ... ]  )에 아래 형식으로 추가합니다.
+
+          { ko: "나는 사과를 좋아해요.", en: "I like apples.", tip: "like + 복수명사" }
+
+        ko  : 한국어 문장 (한→영 드릴의 문제 / 영→한 드릴의 정답)
+        en  : 영어 문장   (영→한 드릴의 문제 / 한→영 드릴의 정답)
+        tip : 교사용 문법 포인트 (생략 가능, "" 로 두면 표시 안 됨)
+
+      - 배열의 "순서 = 난이도 순서" 입니다. 쉬운 문장일수록 앞쪽에 넣으세요.
+      - 문장 안에 큰따옴표(")를 쓰려면 \" 처럼 역슬래시를 붙이세요.
+
+  [1-2] 주어 변화 드릴 문장 추가하기
+      - 주어(I / You / He / She / We / They)만 바꿔 동사 변화를 연습하는 문장에는
+        grp:"sub" 를 하나 더 붙입니다.
+
+          { ko:"그는 매일 학교에 가요.", en:"He goes to school every day.",
+            tip:"go → goes (-es)", grp:"sub" }
+
+      - grp:"sub" 가 붙은 문장은 시작 화면의 [연습 범위]에서
+        "주어 변화 드릴만" 을 고르면 그 문장들만 모아서 연습합니다.
+      - grp 를 붙이지 않으면 "기본 문장"으로 분류됩니다.
+      - 각 급수의 주어 변화 세트는 배열 뒤쪽에 6문장씩 묶어 두었습니다.
+        (같은 문장을 I → You → He → She → We → They 순서로 반복)
+
+  [2] 급수 이름 / 색상 바꾸기
+      - const LEVEL_META = [ ... ] 에서 각 급수의 이름·설명·색상(color)을 수정합니다.
+
+  [3] TTS(음성) 설정 위치
+      - const TTS = { ... }  블록에 모여 있습니다.
+          TTS.rate      : 기본 재생 속도 (0.8 ~ 1.2, 화면 슬라이더로도 조절)
+          TTS.pitch     : 음높이 (기본 1)
+          TTS.langEn    : 영어 음성 언어코드 (기본 'en-US')
+          TTS.langKo    : 한국어 음성 언어코드 (기본 'ko-KR')
+      - 음성이 없는 기기에서는 자동으로 안내 후 텍스트 모드로 작동합니다.
+
+  [4] 타이머 프리셋 바꾸기
+      - const TIMER_PRESETS = [15, 20];  (분 단위, 숫자를 바꾸면 버튼도 바뀝니다)
+
+  [4-2] 연습 범위
+      - 전체 문장 / 기본 문장만 / 주어 변화 드릴만 — 시작 화면에서 선택합니다.
+      - 급수 카드에 표시되는 문장 수도 선택한 범위에 맞게 자동으로 바뀝니다.
+
+  [4-3] 강사 · 반별 진도 저장 (지난 시간에 이어서 하기)
+      - 시작 화면 맨 위 [강사 선택]에서 "+ 강사 추가" 로 강사 이름을 등록합니다.
+      - 등록된 강사를 누르면 아래에 담당 반 목록이 펼쳐지고, "+ 반 추가" 로 반을 등록합니다.
+      - 진도는 강사 > 반 순서로 저장됩니다. (강사를 지우면 그 아래 반도 함께 지워집니다)
+      - 반을 고른 뒤 드릴을 마치거나 ✕로 나가면, 그 반의 급수·방향·다음 시작 번호가
+        자동으로 저장됩니다. 다음 시간에 그 반을 누르면 이어지는 번호부터 시작합니다.
+      - 진도는 "그 컴퓨터의 브라우저"에만 저장됩니다. (서버 전송 없음, 학생 정보 없음)
+        교실 PC가 바뀌면 진도도 따로 관리되니, 반마다 쓰는 PC를 고정해 주세요.
+      - 반을 고르지 않으면 아무것도 저장되지 않습니다. 이때는 [시작 문장 번호]에
+        직접 숫자를 넣어 원하는 곳부터 시작하면 됩니다.
+      - 저장 위치를 바꾸려면 아래 STORE_KEY 값을 수정하세요. (바꾸면 기존 진도는 사라집니다)
+      - 예전 버전(반만 있던 구조)의 진도가 남아 있으면 "이전 반 목록" 이라는 강사 아래로
+        자동으로 옮겨집니다. 이름은 ✕로 지우고 새로 만드셔도 됩니다.
+      - 셔플을 켜면 순서가 무작위라 시작 번호와 진도 저장이 적용되지 않습니다.
+
+  [5] 키보드 단축키
+      - Space : 다음 문장   /   Enter : 정답 공개·숨김
+      - R     : 음원 재생   /   ← → : 이전·다음 문장
+      - T     : 교사 팁 토글  /  Esc : 시작 화면으로
+
+  ※ 이 파일 하나만 있으면 됩니다. 브라우저로 바로 열어 사용하세요.
+    (인터넷이 없으면 구글 폰트와 TTS 음성만 제한되고, 나머지는 모두 정상 작동)
+================================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== 기본 토큰 ===== */
+:root{
+  --blue:#1C5FA6; --blue-dark:#15497F; --blue-soft:#E8F1FA;
+  --gold:#F0A500; --gold-dark:#C98800;
+  --bg:#F5F7FA; --card:#FFFFFF; --card-2:#FFFFFF;
+  --text:#12233A; --text-soft:#4B5F77; --line:#D8E0EA;
+  --ok:#1B8A5A; --warn:#C0392B;
+  --shadow:0 6px 22px rgba(20,45,80,.10);
+  --radius:18px;
+  --font-ko:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --font-en:'Nunito','Segoe UI',Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+  --blue:#4E9BE8; --blue-dark:#2F7CC7; --blue-soft:#16283D;
+  --gold:#FFC24D; --gold-dark:#E0A234;
+  --bg:#0E1620; --card:#17222F; --card-2:#1E2B3A;
+  --text:#EDF3FA; --text-soft:#A9BACD; --line:#2C3B4D;
+  --ok:#4ED39A; --warn:#FF8A7A;
+  --shadow:0 6px 22px rgba(0,0,0,.45);
+  }
+}
+html[data-theme="dark"]{
+  --blue:#4E9BE8; --blue-dark:#2F7CC7; --blue-soft:#16283D;
+  --gold:#FFC24D; --gold-dark:#E0A234;
+  --bg:#0E1620; --card:#17222F; --card-2:#1E2B3A;
+  --text:#EDF3FA; --text-soft:#A9BACD; --line:#2C3B4D;
+  --ok:#4ED39A; --warn:#FF8A7A;
+  --shadow:0 6px 22px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font-ko);
+  background:var(--bg); color:var(--text);
+  min-height:100vh; -webkit-text-size-adjust:100%;
+  transition:background .25s ease, color .25s ease;
+}
+:focus-visible{outline:4px solid var(--gold); outline-offset:3px; border-radius:8px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ===== 버튼 공통 (최소 44x44) ===== */
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+.btn{
+  min-height:52px; min-width:52px; padding:12px 22px;
+  border-radius:14px; font-size:18px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  border:2px solid transparent; transition:transform .12s ease, background .18s ease, border-color .18s ease;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--blue); color:#fff}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-gold{background:var(--gold); color:#26180A}
+.btn-gold:hover{background:var(--gold-dark)}
+.btn-ghost{background:var(--card-2); color:var(--text); border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--blue)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn-lg{min-height:62px; font-size:21px; padding:14px 30px}
+
+/* ===== 상단 바 ===== */
+.topbar{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:14px clamp(14px,3vw,32px);
+  background:var(--card); border-bottom:2px solid var(--line);
+  position:sticky; top:0; z-index:20;
+}
+.brand{display:flex; align-items:center; gap:11px; font-weight:900; font-size:19px; letter-spacing:-.3px}
+.brand .logo{
+  width:40px;height:40px;border-radius:12px;background:var(--blue);color:#fff;
+  display:grid;place-items:center;font-size:20px;flex:none
+}
+.spacer{flex:1}
+.icon-btn{
+  width:52px;height:52px;border-radius:14px;background:var(--card-2);
+  border:2px solid var(--line); display:grid;place-items:center; font-size:20px;
+}
+.icon-btn:hover{border-color:var(--blue)}
+
+/* ===== 배너 ===== */
+.banner{
+  margin:14px clamp(14px,3vw,32px) 0; padding:14px 18px; border-radius:14px;
+  background:#FFF4D6; color:#5A3E00; border:2px solid var(--gold);
+  font-size:16px; font-weight:600; line-height:1.55;
+}
+html[data-theme="dark"] .banner{background:#3A2E12; color:#FFE0A3}
+
+/* ===== 레이아웃 ===== */
+.wrap{max-width:1180px; margin:0 auto; padding:clamp(16px,3vw,34px)}
+h1.title{font-size:clamp(26px,4vw,40px); margin:6px 0 6px; letter-spacing:-1px}
+p.sub{font-size:clamp(15px,2vw,19px); color:var(--text-soft); margin:0 0 26px; line-height:1.6}
+.section{margin-bottom:30px}
+.section h2{
+  font-size:19px; margin:0 0 14px; display:flex; align-items:center; gap:10px;
+}
+.step{
+  width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;
+  display:grid;place-items:center;font-size:15px;font-weight:800;flex:none
+}
+
+/* ===== 급수 카드 ===== */
+.levels{display:grid; grid-template-columns:repeat(6,1fr); gap:14px}
+@media (max-width:1080px){ .levels{grid-template-columns:repeat(3,1fr)} }
+@media (max-width:620px){ .levels{grid-template-columns:repeat(2,1fr)} }
+.level-card{
+  position:relative; text-align:left; padding:18px 18px 16px; border-radius:var(--radius);
+  background:var(--card); border:3px solid var(--line); box-shadow:var(--shadow);
+  transition:border-color .18s ease, transform .12s ease; min-height:132px;
+}
+.level-card:hover{transform:translateY(-3px)}
+.level-card .lv-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:60px;height:36px;padding:0 12px;border-radius:11px;
+  color:#fff; font-weight:900; font-size:17px; margin-bottom:11px;
+}
+.level-card .lv-name{display:block; font-size:19px; font-weight:800; margin-bottom:5px}
+.level-card .lv-desc{display:block; font-size:14.5px; color:var(--text-soft); line-height:1.5}
+.level-card .lv-count{display:block; margin-top:10px; font-size:13.5px; font-weight:700; color:var(--text-soft)}
+.level-card[aria-pressed="true"]{border-color:var(--lvc, var(--blue)); background:var(--blue-soft)}
+.level-card[aria-pressed="true"]::after{
+  content:"✓"; position:absolute; top:12px; right:14px;
+  width:28px;height:28px;border-radius:50%; background:var(--lvc,var(--blue)); color:#fff;
+  display:grid;place-items:center; font-size:16px; font-weight:900;
+}
+
+/* ===== 옵션 그룹 ===== */
+.opt-row{display:flex; flex-wrap:wrap; gap:12px}
+.chip{
+  min-height:56px; padding:12px 22px; border-radius:14px; font-size:17px; font-weight:700;
+  background:var(--card); border:3px solid var(--line); color:var(--text);
+  display:inline-flex; align-items:center; gap:9px;
+}
+.chip:hover{border-color:var(--blue)}
+.chip[aria-pressed="true"], .chip[aria-checked="true"]{
+  background:var(--blue); border-color:var(--blue); color:#fff;
+}
+/* 원어민 선생님용 영어 보조 라벨 */
+.chip.bi{flex-direction:column; align-items:flex-start; gap:2px; padding:10px 20px}
+.chip .en{
+  font-family:var(--font-en); font-size:13.5px; font-weight:600;
+  letter-spacing:.1px; opacity:.72; line-height:1.25;
+}
+h2 .en, .tl-text .en{
+  font-family:var(--font-en); font-size:14.5px; font-weight:600;
+  color:var(--text-soft); letter-spacing:.1px;
+}
+h2 .en{font-size:15.5px}
+.toggle-line{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  background:var(--card); border:2px solid var(--line); border-radius:14px;
+  padding:12px 16px; min-height:60px; margin-bottom:10px;
+}
+.toggle-line .tl-text{font-size:16.5px; font-weight:600}
+.toggle-line .tl-hint{display:block; font-size:13.5px; color:var(--text-soft); font-weight:400; margin-top:3px}
+.switch{
+  width:70px;height:38px;border-radius:19px;background:var(--line);position:relative;flex:none;
+  transition:background .2s ease; border:2px solid transparent;
+}
+.switch::after{
+  content:""; position:absolute; top:3px; left:3px; width:28px;height:28px;border-radius:50%;
+  background:#fff; transition:transform .2s ease; box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.switch[aria-pressed="true"]{background:var(--ok)}
+.switch[aria-pressed="true"]::after{transform:translateX(32px)}
+
+.rate-box{background:var(--card); border:2px solid var(--line); border-radius:14px; padding:14px 18px}
+.rate-box label{font-size:16.5px; font-weight:600; display:flex; justify-content:space-between; margin-bottom:10px}
+input[type=range]{width:100%; height:34px; accent-color:var(--blue)}
+
+.start-cta{display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-top:8px}
+
+/* ===== 반 선택 ===== */
+.class-row{display:flex; flex-wrap:wrap; gap:12px}
+.class-card{
+  display:flex; align-items:stretch; gap:4px; background:var(--card);
+  border:3px solid var(--line); border-radius:16px; padding:5px 6px 5px 4px;
+}
+.class-card[data-sel="true"]{border-color:var(--blue); background:var(--blue-soft)}
+.cc-main{
+  text-align:left; padding:9px 12px; border-radius:11px; min-height:58px;
+  display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:150px;
+}
+.cc-main .cn{font-size:17px; font-weight:800; letter-spacing:-.3px}
+.cc-main .cp{font-size:13.5px; color:var(--text-soft); font-weight:600}
+.class-card[data-sel="true"] .cp{color:var(--blue-dark)}
+.cc-del{
+  width:44px; border-radius:11px; font-size:16px; color:var(--text-soft);
+  display:grid; place-items:center;
+}
+.cc-del:hover{background:var(--card-2); color:var(--warn)}
+.teacher-panel{
+  margin-top:14px; padding:16px; border-radius:16px;
+  background:var(--card-2); border:2px solid var(--line); border-left:6px solid var(--blue);
+}
+.tp-head{
+  font-size:15.5px; font-weight:800; color:var(--text-soft);
+  margin-bottom:12px; display:flex; align-items:baseline; gap:8px;
+}
+.tp-head .en{font-size:13.5px}
+.class-card .caret{font-size:13px; color:var(--text-soft); margin-left:2px}
+.class-card[data-sel="true"] .caret{color:var(--blue)}
+.class-add{
+  min-height:70px; padding:12px 20px; border-radius:16px; font-size:16.5px; font-weight:700;
+  border:3px dashed var(--line); color:var(--text-soft); background:transparent;
+}
+.class-add:hover{border-color:var(--blue); color:var(--blue)}
+
+/* ===== 시작 번호 ===== */
+.startno{
+  background:var(--card); border:2px solid var(--line); border-radius:14px;
+  padding:14px 16px; margin-bottom:10px;
+}
+.startno > label{font-size:16.5px; font-weight:600; display:block; margin-bottom:10px}
+.startno-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.startno-row input[type=number]{
+  width:110px; height:56px; font-size:24px; font-weight:800; text-align:center;
+  font-family:var(--font-en); font-variant-numeric:tabular-nums;
+  border:3px solid var(--line); border-radius:12px; background:var(--card-2); color:var(--text);
+}
+.startno-row .of{font-size:17px; font-weight:700; color:var(--text-soft); font-family:var(--font-en)}
+.startno-row .btn{min-height:56px}
+.startno .tl-hint{display:block; font-size:13.5px; color:var(--text-soft); margin:10px 0 0; line-height:1.55}
+.jump-input{
+  width:100%; height:62px; font-size:28px; font-weight:800; text-align:center;
+  font-family:var(--font-en); border:3px solid var(--line); border-radius:12px;
+  background:var(--card-2); color:var(--text);
+}
+button.counter{border-radius:11px; padding:0 12px; height:44px; border:2px dashed var(--line)}
+button.counter:hover{border-color:var(--blue); border-style:solid}
+.stat.next .v{color:var(--gold-dark)}
+html[data-theme="dark"] .stat.next .v{color:var(--gold)}
+.hint{font-size:14.5px; color:var(--text-soft); line-height:1.6}
+kbd{
+  font-family:var(--font-en); background:var(--card-2); border:2px solid var(--line);
+  border-bottom-width:3px; border-radius:7px; padding:2px 8px; font-size:13.5px; font-weight:700;
+}
+
+/* ===== 드릴 화면 ===== */
+.drill-top{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:12px clamp(14px,3vw,32px); background:var(--card); border-bottom:2px solid var(--line);
+  position:sticky; top:0; z-index:20;
+}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:12px;
+  font-weight:800;font-size:16.5px; color:#fff; background:var(--blue);
+}
+.badge.dir{background:var(--card-2); color:var(--text); border:2px solid var(--line)}
+.counter{font-size:18px; font-weight:800; font-variant-numeric:tabular-nums}
+.timer{
+  font-family:var(--font-en); font-size:23px; font-weight:800; font-variant-numeric:tabular-nums;
+  padding:0 16px; height:44px; display:inline-flex; align-items:center; border-radius:12px;
+  background:var(--card-2); border:2px solid var(--line);
+}
+.timer.low{border-color:var(--warn); color:var(--warn)}
+.progress{
+  height:12px; background:var(--line); border-radius:999px; overflow:hidden; width:100%;
+}
+.progress > i{display:block; height:100%; width:0%; background:var(--gold); transition:width .3s ease}
+.progress-wrap{padding:0 clamp(14px,3vw,32px) 0; background:var(--card); padding-bottom:12px}
+
+.stage{
+  max-width:1180px; margin:0 auto; padding:clamp(18px,3.5vw,40px) clamp(14px,3vw,32px) 24px;
+  display:flex; flex-direction:column; min-height:calc(100vh - 210px);
+}
+.q-card{
+  background:var(--card); border:3px solid var(--line); border-radius:24px; box-shadow:var(--shadow);
+  padding:clamp(22px,4vw,44px); flex:1; display:flex; flex-direction:column; justify-content:center;
+}
+.q-label{
+  font-size:15px; font-weight:800; letter-spacing:.5px; color:var(--text-soft);
+  text-transform:uppercase; margin-bottom:14px;
+}
+.q-text{
+  font-size:clamp(28px,4.6vw,42px); font-weight:900; line-height:1.42; letter-spacing:-.6px;
+  margin:0; word-break:keep-all; transition:opacity .25s ease;
+}
+.q-text.en{font-family:var(--font-en); letter-spacing:-.2px}
+.q-text.fading{opacity:0}
+
+.answer-slot{margin-top:clamp(20px,3vw,34px); min-height:96px}
+.a-box{
+  border-top:3px dashed var(--line); padding-top:clamp(18px,2.6vw,26px);
+  animation:slideIn .32s cubic-bezier(.22,.9,.3,1) both;
+}
+@keyframes slideIn{from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)}}
+.a-label{font-size:15px; font-weight:800; color:var(--ok); margin-bottom:10px; letter-spacing:.4px}
+.a-text{
+  font-size:clamp(22px,3.4vw,32px); font-weight:800; line-height:1.45; margin:0 0 12px;
+  color:var(--text); word-break:keep-all;
+}
+.a-text.en{font-family:var(--font-en)}
+.a-hidden-note{
+  display:flex; align-items:center; gap:10px; color:var(--text-soft); font-size:17px; font-weight:600;
+  border-top:3px dashed var(--line); padding-top:clamp(18px,2.6vw,26px);
+}
+.tip{
+  margin-top:14px; background:var(--blue-soft); border-left:6px solid var(--blue);
+  border-radius:0 12px 12px 0; padding:12px 16px; font-size:16.5px; font-weight:600; line-height:1.55;
+}
+.tip b{color:var(--blue)}
+
+.controls{
+  display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:22px;
+}
+.controls .grow{flex:1 1 auto}
+.speak-btn{position:relative; overflow:hidden}
+.wave{display:inline-flex; align-items:flex-end; gap:3px; height:20px}
+.wave i{width:4px; height:8px; border-radius:2px; background:currentColor; opacity:.85}
+.wave i:nth-child(1){height:9px} .wave i:nth-child(2){height:16px}
+.wave i:nth-child(3){height:12px} .wave i:nth-child(4){height:7px}
+.speaking .wave i{animation:pulse .9s ease-in-out infinite}
+.speaking .wave i:nth-child(2){animation-delay:.15s}
+.speaking .wave i:nth-child(3){animation-delay:.3s}
+.speaking .wave i:nth-child(4){animation-delay:.45s}
+@keyframes pulse{0%,100%{height:6px} 50%{height:19px}}
+@media (prefers-reduced-motion: reduce){
+  .speaking .wave i{animation:none; height:12px}
+  .a-box{animation:none}
+  .q-text{transition:none}
+}
+
+/* ===== 종료 화면 ===== */
+.result{
+  max-width:760px; margin:0 auto; padding:clamp(24px,5vw,60px) 20px; text-align:center;
+}
+.result .big{font-size:clamp(30px,5vw,44px); font-weight:900; margin:16px 0 8px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin:28px 0 30px}
+.stat{background:var(--card); border:3px solid var(--line); border-radius:var(--radius); padding:20px 14px}
+.stat .v{font-size:34px; font-weight:900; font-variant-numeric:tabular-nums; color:var(--blue)}
+.stat .k{font-size:15px; color:var(--text-soft); font-weight:700; margin-top:6px}
+.result .btns{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+
+/* ===== 모달 ===== */
+.modal-bg{
+  position:fixed; inset:0; background:rgba(10,20,35,.55); display:grid; place-items:center;
+  padding:20px; z-index:60;
+}
+.modal{
+  background:var(--card); border-radius:22px; box-shadow:var(--shadow); border:3px solid var(--line);
+  max-width:520px; width:100%; padding:28px;
+}
+.modal h3{margin:0 0 12px; font-size:23px}
+.modal p{margin:0 0 22px; font-size:17px; line-height:1.6; color:var(--text-soft)}
+.modal .btns{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end}
+
+[hidden]{display:none !important}
+
+/* ===== 반응형 ===== */
+@media (max-width:768px){
+  .controls{flex-direction:column; align-items:stretch}
+  .controls .btn{width:100%}
+  .drill-top{gap:7px; padding:10px 12px}
+  .badge,.timer{height:42px; font-size:14.5px; padding:0 11px}
+  .counter{font-size:15.5px}
+  .icon-btn{width:44px;height:44px;font-size:18px}
+  .q-text{font-size:clamp(24px,6.4vw,32px)}
+  .a-text{font-size:clamp(19px,5vw,25px)}
+  .stage{min-height:auto}
+  .brand span.brand-text{display:none}
+}
+@media (max-width:420px){
+  .levels{grid-template-columns:1fr 1fr}
+  .level-card{min-height:120px; padding:14px}
+}
+@media print{ .controls,.topbar,.drill-top{display:none} }
+</style>
+</head>
+<body>
+
+<!-- ===================== 시작 화면 ===================== -->
+<section id="screen-start">
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true">📘</span><span class="brand-text">Speaking Drill</span></div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="themeBtn" aria-label="다크 모드 켜기/끄기" title="다크 모드">🌙</button>
+  </header>
+
+  <div id="ttsBanner" class="banner" hidden role="status"></div>
+
+  <main class="wrap">
+    <h1 class="title">Speaking Drill</h1>
+    <p class="sub">급수와 드릴 방향을 고르고 시작하세요. 화면의 문장을 보고 소리 내어 번역하는 구두 드릴입니다.</p>
+
+    <div class="section" id="classSection">
+      <h2><span class="step">0</span> 강사 선택 <span class="en">/ Teacher</span></h2>
+      <div class="class-row" id="teacherRow"></div>
+
+      <div class="teacher-panel" id="classPanel" hidden>
+        <div class="tp-head"><span id="tpName">담당 반</span> <span class="en">/ Classes</span></div>
+        <div class="class-row" id="classRow"></div>
+      </div>
+
+      <p class="hint" style="margin-top:12px" id="classHint"></p>
+    </div>
+
+    <div class="section">
+      <h2><span class="step">1</span> 급수 선택</h2>
+      <div class="levels" id="levelGrid" role="group" aria-label="급수 선택"></div>
+
+      <h2 style="margin:22px 0 12px"><span class="step">1-2</span> 연습 범위 <span class="en">/ Practice Range</span></h2>
+      <div class="opt-row" role="radiogroup" aria-label="연습 범위 선택" id="scopeRow"></div>
+      <p class="hint" style="margin-top:10px" id="scopeHint"></p>
+    </div>
+
+    <div class="section">
+      <h2><span class="step">2</span> 드릴 방향</h2>
+      <div class="opt-row" role="radiogroup" aria-label="드릴 방향 선택">
+        <button class="chip" role="radio" aria-checked="true" data-dir="ko2en">🇰🇷 → 🇺🇸 &nbsp;한국어 보고 영어로 (번역 드릴)</button>
+        <button class="chip" role="radio" aria-checked="false" data-dir="en2ko">🇺🇸 → 🇰🇷 &nbsp;영어 보고 한국어로 (통역 드릴)</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span class="step">3</span> 세션 설정 <span class="en">/ Session Settings</span></h2>
+      <div class="opt-row" role="radiogroup" aria-label="타이머 설정" id="timerRow" style="margin-bottom:14px"></div>
+
+      <div class="startno">
+        <label for="startNo">▶ 시작 문장 번호 <span class="en">/ Start from</span></label>
+        <div class="startno-row">
+          <button class="btn btn-ghost" id="startNoMinus" aria-label="시작 번호 1 줄이기">−</button>
+          <input type="number" id="startNo" min="1" value="1" inputmode="numeric" aria-label="시작 문장 번호">
+          <span class="of" id="startNoMax">/ 74</span>
+          <button class="btn btn-ghost" id="startNoPlus" aria-label="시작 번호 1 늘리기">+</button>
+          <button class="btn btn-ghost" id="startNoReset">처음부터</button>
+        </div>
+        <p class="tl-hint" id="startNoHint">지난 시간에 20번까지 했다면 <b>21</b>을 입력하세요. 드릴 중에도 상단 번호를 눌러 이동할 수 있습니다.</p>
+      </div>
+
+      <div class="toggle-line">
+        <span class="tl-text">문장 순서 섞기 <span class="en">/ Shuffle</span>
+          <span class="tl-hint">끄면 난이도 순서(쉬움 → 어려움) 그대로 진행합니다. · Off = original difficulty order</span></span>
+        <button class="switch" id="shuffleSw" aria-pressed="false" aria-label="문장 순서 섞기 Shuffle"></button>
+      </div>
+      <div class="toggle-line">
+        <span class="tl-text">교사 팁(문법 포인트) 표시
+          <span class="tl-hint">정답을 공개할 때 문법 포인트를 함께 보여 줍니다.</span></span>
+        <button class="switch" id="tipSw" aria-pressed="true" aria-label="교사 팁 표시"></button>
+      </div>
+      <div class="toggle-line">
+        <span class="tl-text">문제 문장 자동 음원 재생
+          <span class="tl-hint">문장이 바뀔 때마다 자동으로 원어민 음원을 들려 줍니다.</span></span>
+        <button class="switch" id="autoSw" aria-pressed="false" aria-label="자동 음원 재생"></button>
+      </div>
+
+      <div class="rate-box" style="margin-top:12px">
+        <label for="rate">🔊 음원 재생 속도 <span id="rateVal" style="font-family:var(--font-en)">1.00×</span></label>
+        <input type="range" id="rate" min="0.8" max="1.2" step="0.05" value="1"
+               aria-label="음원 재생 속도" aria-valuemin="0.8" aria-valuemax="1.2">
+      </div>
+    </div>
+
+    <div class="start-cta">
+      <button class="btn btn-gold btn-lg" id="startBtn">▶ 드릴 시작하기</button>
+      <button class="btn btn-ghost btn-lg" id="previewBtn">🔊 음성 테스트</button>
+    </div>
+    <p class="hint" style="margin-top:18px">
+      단축키 &nbsp;<kbd>Space</kbd> 다음 &nbsp;·&nbsp; <kbd>Enter</kbd> 정답 공개 &nbsp;·&nbsp;
+      <kbd>R</kbd> 음원 &nbsp;·&nbsp; <kbd>←</kbd><kbd>→</kbd> 이전/다음 &nbsp;·&nbsp;
+      <kbd>T</kbd> 팁 &nbsp;·&nbsp; <kbd>Esc</kbd> 처음으로
+    </p>
+  </main>
+</section>
+
+<!-- ===================== 드릴 화면 ===================== -->
+<section id="screen-drill" hidden>
+  <header class="drill-top">
+    <button class="badge" id="lvBadge" aria-label="급수 변경 (진행 상황 초기화)" title="급수 변경">1급</button>
+    <span class="badge dir" id="dirBadge">한 → 영</span>
+    <button class="counter" id="counter" aria-label="문장 번호로 이동">1 / 50</button>
+    <div class="spacer"></div>
+    <span class="timer" id="timerBox" hidden>15:00</span>
+    <button class="icon-btn" id="themeBtn2" aria-label="다크 모드 켜기/끄기" title="다크 모드">🌙</button>
+    <button class="icon-btn" id="exitBtn" aria-label="드릴 종료하고 처음으로" title="처음으로 (Esc)">✕</button>
+  </header>
+  <div class="progress-wrap">
+    <div class="progress" role="progressbar" aria-label="진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progBar"><i></i></div>
+  </div>
+
+  <div class="stage">
+    <div class="q-card">
+      <p class="q-label" id="qLabel">문제 · 한국어</p>
+      <p class="q-text" id="qText" aria-live="polite">문장을 불러오는 중…</p>
+
+      <div class="answer-slot" id="answerSlot" aria-live="polite">
+        <div class="a-hidden-note" id="hiddenNote">
+          <span aria-hidden="true">🔒</span>
+          <span>정답은 숨겨져 있습니다 — <b>정답 공개</b> 버튼 또는 <kbd>Enter</kbd></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary speak-btn" id="speakBtn" aria-label="문제 문장 음원 재생 (단축키 R)">
+        <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span> 음원 재생
+      </button>
+      <button class="btn btn-gold grow" id="revealBtn" aria-label="정답 공개 (단축키 Enter)">👀 정답 공개</button>
+      <button class="btn btn-ghost" id="prevBtn" aria-label="이전 문장 (단축키 왼쪽 화살표)">← 이전</button>
+      <button class="btn btn-ghost" id="nextBtn" aria-label="다음 문장 (단축키 스페이스 또는 오른쪽 화살표)">다음 →</button>
+      <button class="btn btn-ghost" id="tipBtn" aria-pressed="true" aria-label="교사 팁 표시 켜고 끄기 (단축키 T)">💡 팁</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 종료 화면 ===================== -->
+<section id="screen-end" hidden>
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true">📘</span><span class="brand-text">Speaking Drill</span></div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="themeBtn3" aria-label="다크 모드 켜기/끄기" title="다크 모드">🌙</button>
+  </header>
+  <div class="result" id="resultBox" tabindex="-1" style="outline:none">
+    <div style="font-size:64px" aria-hidden="true">🎉</div>
+    <p class="big" id="endTitle">수고했어요!</p>
+    <p class="sub" id="endSub" style="margin-bottom:0">오늘의 드릴을 마쳤습니다.</p>
+    <div class="stats">
+      <div class="stat"><div class="v" id="statCount">0</div><div class="k">연습한 문장</div></div>
+      <div class="stat"><div class="v" id="statTime">0:00</div><div class="k">소요 시간</div></div>
+      <div class="stat"><div class="v" id="statLevel">1급</div><div class="k">급수</div></div>
+      <div class="stat next"><div class="v" id="statNext">1</div><div class="k">다음 시간 시작 번호</div></div>
+    </div>
+    <p class="hint" id="saveNote" style="margin:-12px 0 24px"></p>
+    <div class="btns">
+      <button class="btn btn-gold btn-lg" id="againBtn">🔁 같은 급수 다시 (셔플)</button>
+      <button class="btn btn-primary btn-lg" id="flipBtn">🔄 방향 바꿔서 한 번 더</button>
+      <button class="btn btn-ghost btn-lg" id="homeBtn">🏠 처음으로</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 확인 모달 ===================== -->
+<div class="modal-bg" id="confirmBg" hidden>
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle" aria-describedby="cfDesc">
+    <h3 id="cfTitle">진행 상황을 초기화할까요?</h3>
+    <p id="cfDesc">지금까지의 진행 현황과 타이머가 초기화됩니다.</p>
+    <div id="cfInputWrap" hidden style="margin:-8px 0 22px">
+      <input type="text" id="cfInput" class="jump-input" aria-label="입력">
+    </div>
+    <div class="btns">
+      <button class="btn btn-ghost" id="cfNo">취소</button>
+      <button class="btn btn-primary" id="cfYes">네, 초기화</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =============================================================================
+   [설정 1] 급수 메타데이터 — 이름 / 설명 / 급수 색상
+   ========================================================================== */
+const LEVEL_META = [
+  { lv:1, name:"1급 · 입문",   desc:"인사 · 숫자 · 색깔 · 동물",            color:"#38BDF8" },
+  { lv:2, name:"2급 · 초급",   desc:"일상 동사 · I like / I have / I am",  color:"#14B8A6" },
+  { lv:3, name:"3급 · 초중급", desc:"형용사 · What / Where / When 의문문",  color:"#22C55E" },
+  { lv:4, name:"4급 · 중급",   desc:"과거형 · 비교급 · 최상급",             color:"#F0A500" },
+  { lv:5, name:"5급 · 중고급", desc:"현재진행형 · will / be going to",      color:"#F97316" },
+  { lv:6, name:"6급 · 고급",   desc:"복문 · 접속사 · 실생활 회화",          color:"#8B5CF6" }
+];
+
+/* =============================================================================
+   [설정 2] TTS(음성) 파라미터 — 여기서 속도·음높이·언어코드를 조정하세요.
+   ========================================================================== */
+const TTS = { rate:1.0, pitch:1.0, volume:1.0, langEn:'en-US', langKo:'ko-KR' };
+
+/* =============================================================================
+   [설정 3] 타이머 프리셋 (분 단위)
+   ========================================================================== */
+const TIMER_PRESETS = [15, 20];
+
+/* =============================================================================
+   [설정 4] 문장 데이터
+   형식: { ko:"한국어", en:"English", tip:"문법 포인트" }
+   ※ 배열 순서 = 난이도 순서 (앞쪽이 쉬움). 순서를 지켜 추가하세요.
+   ========================================================================== */
+const DRILL_DATA = {
+"1": [
+{ko:"안녕하세요.",en:"Hello.",tip:"가장 기본이 되는 인사말"},
+{ko:"안녕, 지민아.",en:"Hi, Jimin.",tip:"Hi + 이름 (친한 사이의 인사)"},
+{ko:"좋은 아침이에요.",en:"Good morning.",tip:"Good + 시간대 = 인사 표현"},
+{ko:"좋은 오후예요.",en:"Good afternoon.",tip:"낮 12시~해질 무렵 인사"},
+{ko:"안녕히 주무세요.",en:"Good night.",tip:"밤에 헤어질 때 / 자기 전 인사"},
+{ko:"안녕히 가세요.",en:"Goodbye.",tip:"헤어질 때 쓰는 인사"},
+{ko:"나중에 봐.",en:"See you later.",tip:"See you + 시점"},
+{ko:"고맙습니다.",en:"Thank you.",tip:"감사 표현"},
+{ko:"천만에요.",en:"You're welcome.",tip:"Thank you에 대한 대답"},
+{ko:"미안해요.",en:"I'm sorry.",tip:"I am의 줄임말 I'm"},
+{ko:"괜찮아요.",en:"That's okay.",tip:"That is → That's"},
+{ko:"어떻게 지내요?",en:"How are you?",tip:"How are + 주어? 안부 묻기"},
+{ko:"저는 잘 지내요.",en:"I'm fine.",tip:"I'm + 형용사"},
+{ko:"만나서 반가워요.",en:"Nice to meet you.",tip:"처음 만났을 때 인사"},
+{ko:"제 이름은 민수예요.",en:"My name is Minsu.",tip:"My name is + 이름"},
+{ko:"이름이 뭐예요?",en:"What's your name?",tip:"What is → What's"},
+{ko:"저는 열 살이에요.",en:"I am ten years old.",tip:"나이 = 숫자 + years old"},
+{ko:"하나, 둘, 셋",en:"one, two, three",tip:"기본 숫자 1~3"},
+{ko:"나는 사과 세 개가 있어요.",en:"I have three apples.",tip:"숫자가 2 이상이면 명사에 -s"},
+{ko:"새 다섯 마리가 있어요.",en:"There are five birds.",tip:"There are + 복수명사"},
+{ko:"나는 연필 두 자루가 있어요.",en:"I have two pencils.",tip:"have = 가지고 있다"},
+{ko:"별 열 개",en:"ten stars",tip:"숫자 10 = ten"},
+{ko:"상자 안에 공 여덟 개가 있어요.",en:"There are eight balls in the box.",tip:"in the box = 상자 안에"},
+{ko:"나는 형이 한 명 있어요.",en:"I have one brother.",tip:"단수는 -s를 붙이지 않아요"},
+{ko:"그것은 첫 번째예요.",en:"It is the first.",tip:"순서를 말할 때 the + 서수"},
+{ko:"이것은 빨간색이에요.",en:"This is red.",tip:"This is + 색깔"},
+{ko:"하늘은 파란색이에요.",en:"The sky is blue.",tip:"정해진 대상 앞에는 the"},
+{ko:"나는 노란 모자를 좋아해요.",en:"I like the yellow hat.",tip:"색깔 형용사는 명사 앞에"},
+{ko:"그 꽃은 분홍색이에요.",en:"The flower is pink.",tip:"주어 + be동사 + 색깔"},
+{ko:"초록색 나무",en:"a green tree",tip:"a + 형용사 + 명사"},
+{ko:"나는 검은색 신발을 신어요.",en:"I wear black shoes.",tip:"shoes는 항상 복수형"},
+{ko:"그 고양이는 하얀색이에요.",en:"The cat is white.",tip:"The + 단수명사 + is"},
+{ko:"무슨 색깔을 좋아해요?",en:"What color do you like?",tip:"What + 명사 + do you ~?"},
+{ko:"나는 보라색을 좋아해요.",en:"I like purple.",tip:"색깔 이름은 그대로 명사로 사용"},
+{ko:"그 공은 주황색이에요.",en:"The ball is orange.",tip:"orange = 주황색 / 오렌지"},
+{ko:"그것은 개예요.",en:"It is a dog.",tip:"셀 수 있는 단수명사 앞에 a"},
+{ko:"나는 새를 좋아해요.",en:"I like birds.",tip:"'~를 일반적으로 좋아한다'는 복수형"},
+{ko:"그 새는 작아요.",en:"The bird is small.",tip:"be동사 + 형용사"},
+{ko:"코끼리는 커요.",en:"The elephant is big.",tip:"모음 앞 an, 여기서는 the"},
+{ko:"나는 토끼 한 마리가 있어요.",en:"I have a rabbit.",tip:"a = 하나의"},
+{ko:"사자는 힘이 세요.",en:"The lion is strong.",tip:"strong = 힘센"},
+{ko:"원숭이는 바나나를 좋아해요.",en:"Monkeys like bananas.",tip:"복수 주어 + 동사원형"},
+{ko:"물고기는 물속에서 헤엄쳐요.",en:"Fish swim in the water.",tip:"fish는 단수·복수 형태가 같아요"},
+{ko:"곰은 갈색이에요.",en:"The bear is brown.",tip:"동물 + be동사 + 색깔"},
+{ko:"그 개는 귀여워요.",en:"The dog is cute.",tip:"cute = 귀여운"},
+{ko:"나는 동물을 좋아해요.",en:"I like animals.",tip:"일반적인 대상은 복수형"},
+{ko:"그것은 호랑이예요.",en:"It is a tiger.",tip:"It is a + 명사"},
+{ko:"새들은 하늘을 날아요.",en:"Birds fly in the sky.",tip:"in the sky = 하늘에서"},
+{ko:"오리 두 마리가 있어요.",en:"There are two ducks.",tip:"There are + 숫자 + 복수명사"},
+{ko:"나는 동물원에서 판다를 봐요.",en:"I see a panda at the zoo.",tip:"at the zoo = 동물원에서"},
+/* ── 주어 변화 드릴 : be동사 (나이) ── */
+{ko:"나는 아홉 살이에요.",en:"I am nine years old.",tip:"I → am",grp:"sub"},
+{ko:"너는 아홉 살이야.",en:"You are nine years old.",tip:"You → are",grp:"sub"},
+{ko:"그는 아홉 살이에요.",en:"He is nine years old.",tip:"He → is",grp:"sub"},
+{ko:"그녀는 아홉 살이에요.",en:"She is nine years old.",tip:"She → is",grp:"sub"},
+{ko:"우리는 아홉 살이에요.",en:"We are nine years old.",tip:"We → are",grp:"sub"},
+{ko:"그들은 아홉 살이에요.",en:"They are nine years old.",tip:"They → are",grp:"sub"},
+/* ── 주어 변화 드릴 : be동사 (색깔) ── */
+{ko:"그것은 빨간색이에요.",en:"It is red.",tip:"It → is (단수)",grp:"sub"},
+{ko:"내 모자는 빨간색이에요.",en:"My hat is red.",tip:"단수 명사 → is",grp:"sub"},
+{ko:"그 사과들은 빨간색이에요.",en:"The apples are red.",tip:"복수 명사 → are",grp:"sub"},
+{ko:"내 신발은 빨간색이에요.",en:"My shoes are red.",tip:"shoes는 항상 복수 → are",grp:"sub"},
+{ko:"우리 차는 빨간색이에요.",en:"Our car is red.",tip:"car(단수) → is",grp:"sub"},
+{ko:"그 꽃들은 빨간색이에요.",en:"The flowers are red.",tip:"flowers(복수) → are",grp:"sub"},
+/* ── 주어 변화 드릴 : like / likes ── */
+{ko:"나는 고양이를 좋아해요.",en:"I like cats.",tip:"I → like (원형)",grp:"sub"},
+{ko:"너는 고양이를 좋아해.",en:"You like cats.",tip:"You → like (원형)",grp:"sub"},
+{ko:"그는 고양이를 좋아해요.",en:"He likes cats.",tip:"He → likes (-s)",grp:"sub"},
+{ko:"그녀는 고양이를 좋아해요.",en:"She likes cats.",tip:"She → likes (-s)",grp:"sub"},
+{ko:"우리는 고양이를 좋아해요.",en:"We like cats.",tip:"We → like (원형)",grp:"sub"},
+{ko:"그들은 고양이를 좋아해요.",en:"They like cats.",tip:"They → like (원형)",grp:"sub"},
+/* ── 주어 변화 드릴 : have / has ── */
+{ko:"나는 개 두 마리가 있어요.",en:"I have two dogs.",tip:"I → have",grp:"sub"},
+{ko:"너는 개 두 마리가 있어.",en:"You have two dogs.",tip:"You → have",grp:"sub"},
+{ko:"그는 개 두 마리가 있어요.",en:"He has two dogs.",tip:"He → has",grp:"sub"},
+{ko:"그녀는 개 두 마리가 있어요.",en:"She has two dogs.",tip:"She → has",grp:"sub"},
+{ko:"우리는 개 두 마리가 있어요.",en:"We have two dogs.",tip:"We → have",grp:"sub"},
+{ko:"그들은 개 두 마리가 있어요.",en:"They have two dogs.",tip:"They → have",grp:"sub"}
+],
+"2": [
+{ko:"나는 학생이에요.",en:"I am a student.",tip:"I am + 직업·신분"},
+{ko:"나는 행복해요.",en:"I am happy.",tip:"I am + 감정 형용사"},
+{ko:"나는 배가 고파요.",en:"I am hungry.",tip:"배고픔은 be동사로 표현"},
+{ko:"나는 목이 말라요.",en:"I am thirsty.",tip:"thirsty = 목마른"},
+{ko:"나는 피곤해요.",en:"I am tired.",tip:"tired = 피곤한"},
+{ko:"나는 준비됐어요.",en:"I am ready.",tip:"ready = 준비된"},
+{ko:"그는 내 친구예요.",en:"He is my friend.",tip:"He + is"},
+{ko:"그녀는 선생님이세요.",en:"She is a teacher.",tip:"She + is + a + 직업"},
+{ko:"우리는 같은 반이에요.",en:"We are in the same class.",tip:"We + are"},
+{ko:"그들은 형제예요.",en:"They are brothers.",tip:"They + are + 복수명사"},
+{ko:"나는 우유를 좋아해요.",en:"I like milk.",tip:"milk는 셀 수 없는 명사"},
+{ko:"나는 축구를 좋아해요.",en:"I like soccer.",tip:"운동 이름 앞에는 a/the를 쓰지 않아요"},
+{ko:"나는 양파를 안 좋아해요.",en:"I don't like onions.",tip:"부정문 = don't + 동사원형"},
+{ko:"그는 음악을 좋아해요.",en:"He likes music.",tip:"3인칭 단수 주어 → 동사에 -s"},
+{ko:"그녀는 책을 좋아해요.",en:"She likes books.",tip:"She likes (like + s)"},
+{ko:"우리는 게임하는 것을 좋아해요.",en:"We like playing games.",tip:"like + 동사ing"},
+{ko:"나는 노래하는 것을 좋아해요.",en:"I like to sing.",tip:"like + to + 동사원형"},
+{ko:"나는 자전거가 있어요.",en:"I have a bike.",tip:"have = 가지고 있다"},
+{ko:"나는 여동생이 있어요.",en:"I have a sister.",tip:"sister = 언니·누나·여동생"},
+{ko:"나는 숙제가 있어요.",en:"I have homework.",tip:"homework는 셀 수 없는 명사"},
+{ko:"그는 새 가방이 있어요.",en:"He has a new bag.",tip:"He/She/It → has"},
+{ko:"그녀는 머리가 길어요.",en:"She has long hair.",tip:"신체 특징은 have/has로"},
+{ko:"우리는 큰 개가 있어요.",en:"We have a big dog.",tip:"We have (원형 그대로)"},
+{ko:"나는 걸어서 학교에 가요.",en:"I walk to school.",tip:"walk to ~ = 걸어서 ~에 가다"},
+{ko:"나는 아침을 먹어요.",en:"I eat breakfast.",tip:"식사 이름 앞에는 관사 없음"},
+{ko:"나는 물을 마셔요.",en:"I drink water.",tip:"drink = 마시다"},
+{ko:"나는 책을 읽어요.",en:"I read a book.",tip:"read = 읽다"},
+{ko:"나는 편지를 써요.",en:"I write a letter.",tip:"write = 쓰다"},
+{ko:"나는 텔레비전을 봐요.",en:"I watch TV.",tip:"watch = (움직이는 것을) 보다"},
+{ko:"나는 음악을 들어요.",en:"I listen to music.",tip:"listen 뒤에는 반드시 to"},
+{ko:"나는 친구들과 놀아요.",en:"I play with my friends.",tip:"play with + 사람"},
+{ko:"나는 일곱 시에 일어나요.",en:"I get up at seven.",tip:"시각 앞에는 at"},
+{ko:"나는 열 시에 자요.",en:"I go to bed at ten.",tip:"go to bed = 잠자리에 들다"},
+{ko:"나는 손을 씻어요.",en:"I wash my hands.",tip:"손은 두 개라서 복수형 hands"},
+{ko:"나는 버스를 타요.",en:"I take the bus.",tip:"take the bus = 버스를 타다"},
+{ko:"그는 빠르게 달려요.",en:"He runs fast.",tip:"runs (3인칭 단수) + 부사 fast"},
+{ko:"그녀는 노래를 잘해요.",en:"She sings well.",tip:"well = 잘 (부사)"},
+{ko:"우리는 공원에서 걸어요.",en:"We walk in the park.",tip:"in the park = 공원에서"},
+{ko:"그들은 방과 후에 공부해요.",en:"They study after school.",tip:"after school = 방과 후에"},
+{ko:"나는 엄마를 도와요.",en:"I help my mom.",tip:"help + 사람"},
+{ko:"나는 그림 그리는 것을 좋아해요.",en:"I like drawing pictures.",tip:"draw a picture = 그림을 그리다"},
+{ko:"나는 개가 없어요.",en:"I don't have a dog.",tip:"don't have = 가지고 있지 않다"},
+{ko:"그는 슬프지 않아요.",en:"He is not sad.",tip:"be동사 부정 = be + not"},
+{ko:"우리는 늦지 않았어요.",en:"We are not late.",tip:"are not = aren't"},
+{ko:"나는 방과 후에 피아노를 쳐요.",en:"I play the piano after school.",tip:"악기 앞에는 the"},
+{ko:"나는 사촌이 두 명 있어요.",en:"I have two cousins.",tip:"cousin = 사촌"},
+{ko:"나는 초콜릿을 아주 좋아해요.",en:"I like chocolate very much.",tip:"very much = 아주 많이"},
+{ko:"그녀는 매일 우유를 마셔요.",en:"She drinks milk every day.",tip:"drink → drinks (3인칭 단수)"},
+{ko:"나는 내 방을 청소해요.",en:"I clean my room.",tip:"clean = 청소하다"},
+{ko:"우리는 함께 점심을 먹어요.",en:"We eat lunch together.",tip:"together = 함께"},
+/* ── 주어 변화 드릴 : go / goes ── */
+{ko:"나는 매일 학교에 가요.",en:"I go to school every day.",tip:"I → go",grp:"sub"},
+{ko:"너는 매일 학교에 가.",en:"You go to school every day.",tip:"You → go",grp:"sub"},
+{ko:"그는 매일 학교에 가요.",en:"He goes to school every day.",tip:"go → goes (-es)",grp:"sub"},
+{ko:"그녀는 매일 학교에 가요.",en:"She goes to school every day.",tip:"She → goes",grp:"sub"},
+{ko:"우리는 매일 학교에 가요.",en:"We go to school every day.",tip:"We → go",grp:"sub"},
+{ko:"그들은 매일 학교에 가요.",en:"They go to school every day.",tip:"They → go",grp:"sub"},
+/* ── 주어 변화 드릴 : study / studies ── */
+{ko:"나는 방과 후에 영어를 공부해요.",en:"I study English after school.",tip:"I → study",grp:"sub"},
+{ko:"너는 방과 후에 영어를 공부해.",en:"You study English after school.",tip:"You → study",grp:"sub"},
+{ko:"그는 방과 후에 영어를 공부해요.",en:"He studies English after school.",tip:"자음+y → y를 i로 바꾸고 -es",grp:"sub"},
+{ko:"그녀는 방과 후에 영어를 공부해요.",en:"She studies English after school.",tip:"She → studies",grp:"sub"},
+{ko:"우리는 방과 후에 영어를 공부해요.",en:"We study English after school.",tip:"We → study",grp:"sub"},
+{ko:"그들은 방과 후에 영어를 공부해요.",en:"They study English after school.",tip:"They → study",grp:"sub"},
+/* ── 주어 변화 드릴 : watch / watches ── */
+{ko:"나는 저녁에 텔레비전을 봐요.",en:"I watch TV in the evening.",tip:"I → watch",grp:"sub"},
+{ko:"너는 저녁에 텔레비전을 봐.",en:"You watch TV in the evening.",tip:"You → watch",grp:"sub"},
+{ko:"그는 저녁에 텔레비전을 봐요.",en:"He watches TV in the evening.",tip:"-ch로 끝나면 -es",grp:"sub"},
+{ko:"그녀는 저녁에 텔레비전을 봐요.",en:"She watches TV in the evening.",tip:"She → watches",grp:"sub"},
+{ko:"우리는 저녁에 텔레비전을 봐요.",en:"We watch TV in the evening.",tip:"We → watch",grp:"sub"},
+{ko:"그들은 저녁에 텔레비전을 봐요.",en:"They watch TV in the evening.",tip:"They → watch",grp:"sub"},
+/* ── 주어 변화 드릴 : don't / doesn't ── */
+{ko:"나는 당근을 좋아하지 않아요.",en:"I don't like carrots.",tip:"I → don't",grp:"sub"},
+{ko:"너는 당근을 좋아하지 않아.",en:"You don't like carrots.",tip:"You → don't",grp:"sub"},
+{ko:"그는 당근을 좋아하지 않아요.",en:"He doesn't like carrots.",tip:"He → doesn't + 동사원형",grp:"sub"},
+{ko:"그녀는 당근을 좋아하지 않아요.",en:"She doesn't like carrots.",tip:"doesn't like (likes 아님)",grp:"sub"},
+{ko:"우리는 당근을 좋아하지 않아요.",en:"We don't like carrots.",tip:"We → don't",grp:"sub"},
+{ko:"그들은 당근을 좋아하지 않아요.",en:"They don't like carrots.",tip:"They → don't",grp:"sub"}
+],
+"3": [
+{ko:"그 책은 재미있어요.",en:"The book is interesting.",tip:"interesting = 흥미로운"},
+{ko:"이 가방은 무거워요.",en:"This bag is heavy.",tip:"This + 단수명사 = 이 ~"},
+{ko:"저 상자는 가벼워요.",en:"That box is light.",tip:"That = 저 ~ (멀리 있는 것)"},
+{ko:"내 방은 깨끗해요.",en:"My room is clean.",tip:"clean은 형용사·동사 둘 다 가능"},
+{ko:"날씨가 추워요.",en:"The weather is cold.",tip:"weather = 날씨"},
+{ko:"오늘은 더워요.",en:"It is hot today.",tip:"날씨의 주어는 It"},
+{ko:"그 이야기는 슬퍼요.",en:"The story is sad.",tip:"story = 이야기"},
+{ko:"그 문제는 어려워요.",en:"The question is difficult.",tip:"difficult = 어려운"},
+{ko:"이 시험은 쉬워요.",en:"This test is easy.",tip:"easy ↔ difficult"},
+{ko:"그 아기는 아주 귀여워요.",en:"The baby is very cute.",tip:"very + 형용사 = 아주 ~한"},
+{ko:"내 신발은 새것이에요.",en:"My shoes are new.",tip:"shoes는 복수라서 are"},
+{ko:"그 건물은 높아요.",en:"The building is tall.",tip:"tall = (세로로) 높은"},
+{ko:"그 강은 길어요.",en:"The river is long.",tip:"long ↔ short"},
+{ko:"이 수프는 뜨거워요.",en:"This soup is hot.",tip:"hot = 뜨거운 / 더운"},
+{ko:"그녀의 목소리는 아름다워요.",en:"Her voice is beautiful.",tip:"Her = 그녀의"},
+{ko:"그 사과는 달아요.",en:"The apple is sweet.",tip:"sweet = 달콤한"},
+{ko:"이 방은 조용해요.",en:"This room is quiet.",tip:"quiet ↔ noisy"},
+{ko:"그 교실은 시끄러워요.",en:"The classroom is noisy.",tip:"noisy = 시끄러운"},
+{ko:"우리 선생님은 친절하세요.",en:"My teacher is kind.",tip:"kind = 친절한"},
+{ko:"그 소년은 용감해요.",en:"The boy is brave.",tip:"brave = 용감한"},
+{ko:"이 의자는 편해요.",en:"This chair is comfortable.",tip:"comfortable = 편안한"},
+{ko:"그 음식은 맛있어요.",en:"The food is delicious.",tip:"delicious = 아주 맛있는"},
+{ko:"내 손이 더러워요.",en:"My hands are dirty.",tip:"dirty ↔ clean"},
+{ko:"그 길은 좁아요.",en:"The road is narrow.",tip:"narrow ↔ wide"},
+{ko:"이 공원은 넓어요.",en:"This park is wide.",tip:"wide = 넓은"},
+{ko:"이 색은 밝아요.",en:"This color is bright.",tip:"bright = 밝은"},
+{ko:"그것은 뭐예요?",en:"What is it?",tip:"What + be동사 + 주어?"},
+{ko:"이것은 무엇인가요?",en:"What is this?",tip:"this = 이것"},
+{ko:"너는 무엇을 원하니?",en:"What do you want?",tip:"What + do + 주어 + 동사원형?"},
+{ko:"너는 점심으로 무엇을 먹니?",en:"What do you eat for lunch?",tip:"for lunch = 점심으로"},
+{ko:"네가 가장 좋아하는 과목은 뭐니?",en:"What is your favorite subject?",tip:"favorite = 가장 좋아하는"},
+{ko:"지금 몇 시예요?",en:"What time is it now?",tip:"시각을 묻는 표현"},
+{ko:"오늘 날씨가 어때요?",en:"What is the weather like today?",tip:"What ~ like? = 어떠한가?"},
+{ko:"너는 어떤 운동을 좋아하니?",en:"What sport do you like?",tip:"What + 명사 + do you ~?"},
+{ko:"그의 이름은 무엇이니?",en:"What is his name?",tip:"his = 그의"},
+{ko:"너는 어디에 사니?",en:"Where do you live?",tip:"Where = 어디에"},
+{ko:"내 열쇠는 어디에 있어요?",en:"Where is my key?",tip:"Where + be동사 + 주어?"},
+{ko:"화장실이 어디예요?",en:"Where is the restroom?",tip:"restroom = 화장실"},
+{ko:"너는 어디에 가니?",en:"Where do you go?",tip:"go 뒤에 장소가 오면 to 필요"},
+{ko:"그들은 어디에서 만나니?",en:"Where do they meet?",tip:"they + do"},
+{ko:"네 가방은 어디에 있니?",en:"Where is your bag?",tip:"단수 주어 → is"},
+{ko:"그 고양이는 어디에 있니?",en:"Where is the cat?",tip:"위치를 묻는 질문"},
+{ko:"네 생일은 언제니?",en:"When is your birthday?",tip:"When = 언제"},
+{ko:"수업은 언제 시작하니?",en:"When does the class start?",tip:"3인칭 단수 의문문 → does"},
+{ko:"너는 언제 학교에 가니?",en:"When do you go to school?",tip:"When + do + you ~?"},
+{ko:"우리는 언제 만나니?",en:"When do we meet?",tip:"we + do"},
+{ko:"그 영화는 언제 끝나니?",en:"When does the movie end?",tip:"does 뒤에는 동사원형"},
+{ko:"우리는 저녁을 언제 먹니?",en:"When do we have dinner?",tip:"have dinner = 저녁을 먹다"},
+{ko:"그 축제는 언제니?",en:"When is the festival?",tip:"festival = 축제"},
+{ko:"너는 왜 슬프니?",en:"Why are you sad?",tip:"Why = 왜, 이유를 묻는 의문사"},
+/* ── 주어 변화 드릴 : be동사 + 형용사 ── */
+{ko:"나는 친절해요.",en:"I am kind.",tip:"I → am",grp:"sub"},
+{ko:"너는 친절해.",en:"You are kind.",tip:"You → are",grp:"sub"},
+{ko:"그는 친절해요.",en:"He is kind.",tip:"He → is",grp:"sub"},
+{ko:"그녀는 친절해요.",en:"She is kind.",tip:"She → is",grp:"sub"},
+{ko:"우리는 친절해요.",en:"We are kind.",tip:"We → are",grp:"sub"},
+{ko:"그들은 친절해요.",en:"They are kind.",tip:"They → are",grp:"sub"},
+/* ── 주어 변화 드릴 : Do / Does 의문문 ── */
+{ko:"너는 음악을 좋아하니?",en:"Do you like music?",tip:"you → Do",grp:"sub"},
+{ko:"그는 음악을 좋아하니?",en:"Does he like music?",tip:"he → Does + 동사원형",grp:"sub"},
+{ko:"그녀는 음악을 좋아하니?",en:"Does she like music?",tip:"she → Does",grp:"sub"},
+{ko:"우리는 음악을 좋아하니?",en:"Do we like music?",tip:"we → Do",grp:"sub"},
+{ko:"그들은 음악을 좋아하니?",en:"Do they like music?",tip:"they → Do",grp:"sub"},
+{ko:"네 형은 음악을 좋아하니?",en:"Does your brother like music?",tip:"3인칭 단수 주어 → Does",grp:"sub"},
+/* ── 주어 변화 드릴 : 의문사 + do/does ── */
+{ko:"너는 무엇을 좋아하니?",en:"What do you like?",tip:"What + do + you",grp:"sub"},
+{ko:"그는 무엇을 좋아하니?",en:"What does he like?",tip:"What + does + he",grp:"sub"},
+{ko:"그녀는 어디에 사니?",en:"Where does she live?",tip:"Where + does + she + 동사원형",grp:"sub"},
+{ko:"그들은 어디에 사니?",en:"Where do they live?",tip:"Where + do + they",grp:"sub"},
+{ko:"네 선생님은 언제 오시니?",en:"When does your teacher come?",tip:"단수 주어 → does",grp:"sub"},
+{ko:"네 친구들은 언제 오니?",en:"When do your friends come?",tip:"복수 주어 → do",grp:"sub"},
+/* ── 주어 변화 드릴 : There is / There are ── */
+{ko:"책이 한 권 있어요.",en:"There is a book.",tip:"단수 → There is",grp:"sub"},
+{ko:"책이 세 권 있어요.",en:"There are three books.",tip:"복수 → There are",grp:"sub"},
+{ko:"우유가 있어요.",en:"There is milk.",tip:"셀 수 없는 명사 → There is",grp:"sub"},
+{ko:"학생이 한 명 있어요.",en:"There is a student.",tip:"a student(단수) → is",grp:"sub"},
+{ko:"학생이 스무 명 있어요.",en:"There are twenty students.",tip:"students(복수) → are",grp:"sub"},
+{ko:"상자 안에 공이 하나 있어요.",en:"There is a ball in the box.",tip:"There is + 단수 + 장소",grp:"sub"}
+],
+"4": [
+{ko:"나는 지난 토요일에 도서관에 갔어요.",en:"I went to the library last Saturday.",tip:"go의 과거형 = went"},
+{ko:"나는 아침을 먹었어요.",en:"I ate breakfast.",tip:"eat → ate (불규칙 과거)"},
+{ko:"우리는 공원에서 놀았어요.",en:"We played in the park.",tip:"규칙 동사 + -ed"},
+{ko:"그는 책을 읽었어요.",en:"He read a book.",tip:"read의 과거형은 철자가 같고 발음만 '레드'"},
+{ko:"그녀는 노래를 불렀어요.",en:"She sang a song.",tip:"sing → sang"},
+{ko:"나는 영화를 봤어요.",en:"I watched a movie.",tip:"watch → watched"},
+{ko:"그들은 축구를 했어요.",en:"They played soccer.",tip:"play → played"},
+{ko:"나는 지난 주말에 할머니를 찾아뵈었어요.",en:"I visited my grandmother last weekend.",tip:"last weekend = 지난 주말에"},
+{ko:"우리는 사진을 찍었어요.",en:"We took pictures.",tip:"take → took"},
+{ko:"나는 편지를 썼어요.",en:"I wrote a letter.",tip:"write → wrote"},
+{ko:"그는 늦게 왔어요.",en:"He came late.",tip:"come → came"},
+{ko:"나는 열쇠를 잃어버렸어요.",en:"I lost my key.",tip:"lose → lost"},
+{ko:"우리는 버스를 탔어요.",en:"We took the bus.",tip:"take the bus의 과거형"},
+{ko:"그녀는 새 가방을 샀어요.",en:"She bought a new bag.",tip:"buy → bought"},
+{ko:"나는 어제 신났어요.",en:"I was excited yesterday.",tip:"am/is의 과거형 = was"},
+{ko:"그들은 교실에 있었어요.",en:"They were in the classroom.",tip:"are의 과거형 = were"},
+{ko:"어제는 추웠어요.",en:"It was cold yesterday.",tip:"날씨 과거 = It was"},
+{ko:"나는 숙제를 끝냈어요.",en:"I finished my homework.",tip:"finish → finished"},
+{ko:"나는 어젯밤에 일찍 잤어요.",en:"I went to bed early last night.",tip:"last night = 어젯밤"},
+{ko:"우리는 시험을 잘 봤어요.",en:"We did well on the test.",tip:"do well = 잘하다"},
+{ko:"나는 지난여름에 수영을 배웠어요.",en:"I learned to swim last summer.",tip:"learn to + 동사원형"},
+{ko:"그는 나를 도와줬어요.",en:"He helped me.",tip:"help → helped"},
+{ko:"나는 그 이야기를 들었어요.",en:"I heard the story.",tip:"hear → heard"},
+{ko:"우리는 어제 아무것도 하지 않았어요.",en:"We didn't do anything yesterday.",tip:"과거 부정 = didn't + 동사원형"},
+{ko:"나는 그를 보지 못했어요.",en:"I didn't see him.",tip:"didn't 뒤에는 반드시 동사원형"},
+{ko:"너는 어제 무엇을 했니?",en:"What did you do yesterday?",tip:"과거 의문문 = did + 주어 + 동사원형"},
+{ko:"너는 어디에 갔었니?",en:"Where did you go?",tip:"Where + did + 주어 + 동사원형?"},
+{ko:"그것은 언제 시작했니?",en:"When did it start?",tip:"When did ~?"},
+{ko:"우리는 지난주에 부산에 갔어요.",en:"We went to Busan last week.",tip:"last week = 지난주"},
+{ko:"나는 작년에 태권도를 시작했어요.",en:"I started taekwondo last year.",tip:"last year = 작년에"},
+{ko:"나는 아침에 우유를 마셨어요.",en:"I drank milk in the morning.",tip:"drink → drank"},
+{ko:"우리는 정말 즐거운 시간을 보냈어요.",en:"We had a great time.",tip:"have a great time의 과거형"},
+{ko:"나는 형보다 키가 커요.",en:"I am taller than my brother.",tip:"비교급 = 형용사 + -er + than"},
+{ko:"이 가방은 저것보다 무거워요.",en:"This bag is heavier than that one.",tip:"y로 끝나면 y → i + er"},
+{ko:"오늘은 어제보다 더워요.",en:"Today is hotter than yesterday.",tip:"짧은 모음+자음은 자음을 겹쳐 씀"},
+{ko:"그는 나보다 빨리 달려요.",en:"He runs faster than me.",tip:"부사도 -er로 비교급"},
+{ko:"이 책은 저 책보다 재미있어요.",en:"This book is more interesting than that book.",tip:"긴 형용사는 more + 형용사"},
+{ko:"수학은 영어보다 어려워요.",en:"Math is more difficult than English.",tip:"more difficult (3음절 이상)"},
+{ko:"내 방은 네 방보다 커요.",en:"My room is bigger than your room.",tip:"big → bigger"},
+{ko:"그녀는 나보다 어려요.",en:"She is younger than me.",tip:"young → younger"},
+{ko:"이 강은 저 강보다 길어요.",en:"This river is longer than that river.",tip:"long → longer"},
+{ko:"겨울은 가을보다 추워요.",en:"Winter is colder than fall.",tip:"fall = autumn (가을)"},
+{ko:"저 영화는 이 영화보다 좋아요.",en:"That movie is better than this one.",tip:"good → better (불규칙)"},
+{ko:"내 가방은 그의 것보다 새것이에요.",en:"My bag is newer than his.",tip:"his = 그의 것"},
+{ko:"그 시험은 내 생각보다 쉬웠어요.",en:"The test was easier than I thought.",tip:"easy → easier"},
+{ko:"그는 반에서 키가 가장 커요.",en:"He is the tallest in the class.",tip:"최상급 = the + 형용사 + -est"},
+{ko:"이것이 그 가게에서 가장 싸요.",en:"This is the cheapest in the store.",tip:"cheap → the cheapest"},
+{ko:"그것은 세계에서 가장 긴 강이에요.",en:"It is the longest river in the world.",tip:"in the world = 세계에서"},
+{ko:"나는 사과보다 바나나를 더 좋아해요.",en:"I like bananas more than apples.",tip:"more than = ~보다 더"},
+{ko:"그것은 내 인생에서 최고의 날이었어요.",en:"It was the best day of my life.",tip:"good → best (최상급 불규칙)"},
+/* ── 주어 변화 드릴 : was / were ── */
+{ko:"나는 어제 행복했어요.",en:"I was happy yesterday.",tip:"I → was",grp:"sub"},
+{ko:"너는 어제 행복했어.",en:"You were happy yesterday.",tip:"You → were",grp:"sub"},
+{ko:"그는 어제 행복했어요.",en:"He was happy yesterday.",tip:"He → was",grp:"sub"},
+{ko:"그녀는 어제 행복했어요.",en:"She was happy yesterday.",tip:"She → was",grp:"sub"},
+{ko:"우리는 어제 행복했어요.",en:"We were happy yesterday.",tip:"We → were",grp:"sub"},
+{ko:"그들은 어제 행복했어요.",en:"They were happy yesterday.",tip:"They → were",grp:"sub"},
+/* ── 주어 변화 드릴 : 과거형은 주어가 바뀌어도 그대로 ── */
+{ko:"나는 어제 학교에 갔어요.",en:"I went to school yesterday.",tip:"과거형 went",grp:"sub"},
+{ko:"너는 어제 학교에 갔어.",en:"You went to school yesterday.",tip:"주어가 바뀌어도 went",grp:"sub"},
+{ko:"그는 어제 학교에 갔어요.",en:"He went to school yesterday.",tip:"3인칭 단수여도 -s를 붙이지 않아요",grp:"sub"},
+{ko:"그녀는 어제 학교에 갔어요.",en:"She went to school yesterday.",tip:"went 그대로",grp:"sub"},
+{ko:"우리는 어제 학교에 갔어요.",en:"We went to school yesterday.",tip:"went 그대로",grp:"sub"},
+{ko:"그들은 어제 학교에 갔어요.",en:"They went to school yesterday.",tip:"went 그대로",grp:"sub"},
+/* ── 주어 변화 드릴 : didn't (과거 부정) ── */
+{ko:"나는 숙제를 하지 않았어요.",en:"I didn't do my homework.",tip:"didn't + 동사원형",grp:"sub"},
+{ko:"너는 숙제를 하지 않았어.",en:"You didn't do your homework.",tip:"didn't는 주어와 관계없이 그대로",grp:"sub"},
+{ko:"그는 숙제를 하지 않았어요.",en:"He didn't do his homework.",tip:"doesn't가 아니라 didn't",grp:"sub"},
+{ko:"그녀는 숙제를 하지 않았어요.",en:"She didn't do her homework.",tip:"her homework(그녀의 숙제)",grp:"sub"},
+{ko:"우리는 숙제를 하지 않았어요.",en:"We didn't do our homework.",tip:"our homework",grp:"sub"},
+{ko:"그들은 숙제를 하지 않았어요.",en:"They didn't do their homework.",tip:"their homework",grp:"sub"},
+/* ── 주어 변화 드릴 : 비교급 + be동사 ── */
+{ko:"나는 그보다 키가 커요.",en:"I am taller than him.",tip:"I am + 비교급",grp:"sub"},
+{ko:"너는 나보다 나이가 많아.",en:"You are older than me.",tip:"You are + 비교급",grp:"sub"},
+{ko:"그는 나보다 키가 커요.",en:"He is taller than me.",tip:"He is + 비교급",grp:"sub"},
+{ko:"그녀는 언니보다 어려요.",en:"She is younger than her sister.",tip:"She is + 비교급",grp:"sub"},
+{ko:"우리는 그들보다 빨라요.",en:"We are faster than them.",tip:"We are + 비교급",grp:"sub"},
+{ko:"그들은 우리보다 키가 커요.",en:"They are taller than us.",tip:"They are + 비교급",grp:"sub"}
+],
+"5": [
+{ko:"나는 만화책을 읽고 있어요.",en:"I am reading a comic book.",tip:"현재진행형 = be동사 + 동사ing"},
+{ko:"그는 축구를 하고 있어요.",en:"He is playing soccer.",tip:"He is + -ing"},
+{ko:"그녀는 노래를 부르고 있어요.",en:"She is singing a song.",tip:"sing → singing"},
+{ko:"우리는 점심을 먹고 있어요.",en:"We are eating lunch.",tip:"We are + -ing"},
+{ko:"그들은 공원에서 뛰고 있어요.",en:"They are running in the park.",tip:"run → running (자음 겹침)"},
+{ko:"나는 숙제를 하고 있어요.",en:"I am doing my homework.",tip:"do → doing"},
+{ko:"엄마가 저녁을 만들고 계세요.",en:"My mom is cooking dinner.",tip:"cook → cooking"},
+{ko:"비가 오고 있어요.",en:"It is raining.",tip:"날씨 진행형은 주어 It"},
+{ko:"눈이 오고 있어요.",en:"It is snowing.",tip:"snow → snowing"},
+{ko:"아기가 자고 있어요.",en:"The baby is sleeping.",tip:"sleep → sleeping"},
+{ko:"나는 버스를 기다리고 있어요.",en:"I am waiting for the bus.",tip:"wait for = ~을 기다리다"},
+{ko:"너는 지금 무엇을 하고 있니?",en:"What are you doing now?",tip:"진행형 의문문 = be동사 + 주어 + -ing"},
+{ko:"그는 어디에 가고 있니?",en:"Where is he going?",tip:"Where + is + 주어 + -ing?"},
+{ko:"나는 지금 텔레비전을 보고 있지 않아요.",en:"I am not watching TV now.",tip:"진행형 부정 = be + not + -ing"},
+{ko:"우리는 영어를 공부하고 있어요.",en:"We are studying English.",tip:"study → studying"},
+{ko:"그 고양이가 나를 보고 있어요.",en:"The cat is looking at me.",tip:"look at = ~을 바라보다"},
+{ko:"나는 지금 편지를 쓰고 있어요.",en:"I am writing a letter now.",tip:"write → writing (e 탈락)"},
+{ko:"그들은 사진을 찍고 있어요.",en:"They are taking pictures.",tip:"take → taking"},
+{ko:"나는 손을 씻고 있어요.",en:"I am washing my hands.",tip:"wash → washing"},
+{ko:"아빠가 차를 운전하고 계세요.",en:"My dad is driving a car.",tip:"drive → driving"},
+{ko:"나는 지금 친구를 기다리고 있어요.",en:"I am waiting for my friend now.",tip:"now와 함께 자주 쓰여요"},
+{ko:"나는 내일 도서관에 갈 거예요.",en:"I will go to the library tomorrow.",tip:"will + 동사원형 = ~할 것이다"},
+{ko:"나는 내일 그를 만날 거예요.",en:"I will meet him tomorrow.",tip:"will meet (원형 그대로)"},
+{ko:"우리는 곧 출발할 거예요.",en:"We will leave soon.",tip:"soon = 곧"},
+{ko:"그녀는 파티에 올 거예요.",en:"She will come to the party.",tip:"주어가 바뀌어도 will은 그대로"},
+{ko:"내일은 비가 올 거예요.",en:"It will rain tomorrow.",tip:"미래의 날씨 표현"},
+{ko:"나는 최선을 다할 거예요.",en:"I will do my best.",tip:"do one's best = 최선을 다하다"},
+{ko:"그가 너를 도와줄 거예요.",en:"He will help you.",tip:"will help"},
+{ko:"나는 늦지 않을 거예요.",en:"I will not be late.",tip:"will not = won't"},
+{ko:"창문을 닫아 주시겠어요?",en:"Will you close the window?",tip:"Will you ~? = 부탁 표현"},
+{ko:"나는 다시 시도할 거예요.",en:"I will try again.",tip:"try again = 다시 해보다"},
+{ko:"나는 그것을 잊지 않을 거예요.",en:"I will not forget it.",tip:"forget = 잊다"},
+{ko:"그 기차는 세 시에 출발할 거예요.",en:"The train will leave at three.",tip:"at + 시각"},
+{ko:"우리는 좋은 시간을 보낼 거예요.",en:"We will have a good time.",tip:"will have"},
+{ko:"그녀는 우리와 함께 갈 거예요.",en:"She will go with us.",tip:"with us = 우리와 함께"},
+{ko:"나는 내일 일찍 일어날 거예요.",en:"I will get up early tomorrow.",tip:"early = 일찍"},
+{ko:"나는 주말에 영화를 볼 거예요.",en:"I am going to watch a movie on the weekend.",tip:"be going to + 동사원형 = 계획된 미래"},
+{ko:"우리는 제주도에 갈 거예요.",en:"We are going to visit Jeju Island.",tip:"are going to visit"},
+{ko:"나는 새 자전거를 살 거예요.",en:"I am going to buy a new bike.",tip:"계획을 말할 때 be going to"},
+{ko:"그들은 야구를 할 거예요.",en:"They are going to play baseball.",tip:"They are going to + 동사원형"},
+{ko:"나는 피아노를 배울 거예요.",en:"I am going to learn the piano.",tip:"learn the piano = 피아노를 배우다"},
+{ko:"너는 이번 방학에 무엇을 할 거니?",en:"What are you going to do this vacation?",tip:"What are you going to ~?"},
+{ko:"나는 방을 청소할 거예요.",en:"I am going to clean my room.",tip:"clean my room"},
+{ko:"우리는 다음 주에 시험이 있을 거예요.",en:"We are going to have a test next week.",tip:"next week = 다음 주"},
+{ko:"그는 의사가 될 거예요.",en:"He is going to be a doctor.",tip:"be going to be = ~이 될 것이다"},
+{ko:"우리는 내일 소풍을 갈 거예요.",en:"We are going to go on a picnic tomorrow.",tip:"go on a picnic = 소풍 가다"},
+{ko:"너는 나를 도와줄 거니?",en:"Are you going to help me?",tip:"be going to 의문문 = be동사를 앞으로"},
+{ko:"나는 수학을 열심히 공부할 거예요.",en:"I am going to study math hard.",tip:"hard = 열심히"},
+{ko:"나는 커서 선생님이 되고 싶어요.",en:"I want to be a teacher when I grow up.",tip:"want to be = ~이 되고 싶다"},
+{ko:"우리는 다음 달에 이사할 거예요.",en:"We are going to move next month.",tip:"move = 이사하다"},
+/* ── 주어 변화 드릴 : 현재진행형 be동사 ── */
+{ko:"나는 책을 읽고 있어요.",en:"I am reading a book.",tip:"I am + -ing",grp:"sub"},
+{ko:"너는 책을 읽고 있어.",en:"You are reading a book.",tip:"You are + -ing",grp:"sub"},
+{ko:"그는 책을 읽고 있어요.",en:"He is reading a book.",tip:"He is + -ing",grp:"sub"},
+{ko:"그녀는 책을 읽고 있어요.",en:"She is reading a book.",tip:"She is + -ing",grp:"sub"},
+{ko:"우리는 책을 읽고 있어요.",en:"We are reading a book.",tip:"We are + -ing",grp:"sub"},
+{ko:"그들은 책을 읽고 있어요.",en:"They are reading a book.",tip:"They are + -ing",grp:"sub"},
+/* ── 주어 변화 드릴 : 진행형 의문문 ── */
+{ko:"너는 무엇을 하고 있니?",en:"What are you doing?",tip:"are + you",grp:"sub"},
+{ko:"그는 무엇을 하고 있니?",en:"What is he doing?",tip:"is + he",grp:"sub"},
+{ko:"그녀는 무엇을 하고 있니?",en:"What is she doing?",tip:"is + she",grp:"sub"},
+{ko:"우리는 무엇을 하고 있니?",en:"What are we doing?",tip:"are + we",grp:"sub"},
+{ko:"그들은 무엇을 하고 있니?",en:"What are they doing?",tip:"are + they",grp:"sub"},
+{ko:"네 동생은 무엇을 하고 있니?",en:"What is your brother doing?",tip:"단수 주어 → is",grp:"sub"},
+/* ── 주어 변화 드릴 : will 은 주어가 바뀌어도 그대로 ── */
+{ko:"나는 내일 올 거예요.",en:"I will come tomorrow.",tip:"will + 동사원형",grp:"sub"},
+{ko:"너는 내일 올 거야.",en:"You will come tomorrow.",tip:"will 그대로",grp:"sub"},
+{ko:"그는 내일 올 거예요.",en:"He will come tomorrow.",tip:"He wills (X) → He will",grp:"sub"},
+{ko:"그녀는 내일 올 거예요.",en:"She will come tomorrow.",tip:"will 그대로",grp:"sub"},
+{ko:"우리는 내일 올 거예요.",en:"We will come tomorrow.",tip:"will 그대로",grp:"sub"},
+{ko:"그들은 내일 올 거예요.",en:"They will come tomorrow.",tip:"will 그대로",grp:"sub"},
+/* ── 주어 변화 드릴 : be going to ── */
+{ko:"나는 영어를 열심히 공부할 거예요.",en:"I am going to study English hard.",tip:"am going to",grp:"sub"},
+{ko:"너는 영어를 열심히 공부할 거야.",en:"You are going to study English hard.",tip:"are going to",grp:"sub"},
+{ko:"그는 영어를 열심히 공부할 거예요.",en:"He is going to study English hard.",tip:"is going to",grp:"sub"},
+{ko:"그녀는 영어를 열심히 공부할 거예요.",en:"She is going to study English hard.",tip:"is going to",grp:"sub"},
+{ko:"우리는 영어를 열심히 공부할 거예요.",en:"We are going to study English hard.",tip:"are going to",grp:"sub"},
+{ko:"그들은 영어를 열심히 공부할 거예요.",en:"They are going to study English hard.",tip:"are going to",grp:"sub"}
+],
+"6": [
+{ko:"나는 피곤해서 일찍 잤어요.",en:"I went to bed early because I was tired.",tip:"because + 주어 + 동사 = 이유"},
+{ko:"비가 왔지만 우리는 밖에서 놀았어요.",en:"It rained, but we played outside.",tip:"but = 그러나 (대조)"},
+{ko:"나는 책을 읽거나 음악을 들어요.",en:"I read books or listen to music.",tip:"or = 또는 (선택)"},
+{ko:"네가 원하면 같이 가도 돼.",en:"You can come with me if you want.",tip:"if = 만약 ~라면"},
+{ko:"숙제를 끝내면 놀 수 있어.",en:"You can play when you finish your homework.",tip:"when + 주어 + 동사 = ~할 때"},
+{ko:"나는 사과와 바나나를 둘 다 좋아해요.",en:"I like both apples and bananas.",tip:"both A and B = A와 B 둘 다"},
+{ko:"나는 늦어서 버스를 탔어요.",en:"I took the bus because I was late.",tip:"이유를 뒤에 붙이는 복문"},
+{ko:"시간이 있으면 전화해 줘.",en:"Call me if you have time.",tip:"명령문 + if절"},
+{ko:"나는 그가 올 거라고 생각해요.",en:"I think he will come.",tip:"I think (that) + 주어 + 동사"},
+{ko:"나는 네가 옳다고 믿어요.",en:"I believe you are right.",tip:"believe (that) + 문장"},
+{ko:"그녀는 아파서 학교에 오지 않았어요.",en:"She didn't come to school because she was sick.",tip:"과거 부정 + because절"},
+{ko:"나는 우유를 좋아하지만 커피는 좋아하지 않아요.",en:"I like milk, but I don't like coffee.",tip:"but 앞에 쉼표를 씁니다"},
+{ko:"나는 숙제를 한 후에 텔레비전을 봤어요.",en:"I watched TV after I did my homework.",tip:"after = ~한 후에"},
+{ko:"나는 저녁을 먹기 전에 손을 씻어요.",en:"I wash my hands before I eat dinner.",tip:"before = ~하기 전에"},
+{ko:"서두르지 않으면 늦을 거야.",en:"If you don't hurry, you will be late.",tip:"조건절은 현재형, 주절은 will"},
+{ko:"열심히 공부하면 시험을 잘 볼 거야.",en:"If you study hard, you will do well on the test.",tip:"if절 + will 주절"},
+{ko:"그녀는 친절해서 모두가 그녀를 좋아해요.",en:"Everyone likes her because she is kind.",tip:"Everyone은 단수 취급 → likes"},
+{ko:"우리는 비가 와서 소풍을 취소했어요.",en:"We canceled the picnic because it rained.",tip:"cancel → canceled"},
+{ko:"나는 아침을 먹고 나서 학교에 가요.",en:"I go to school after I eat breakfast.",tip:"after절 + 주절"},
+{ko:"우리가 도착했을 때 영화는 이미 시작했어요.",en:"When we arrived, the movie had already started.",tip:"already = 이미"},
+{ko:"나는 그것을 어떻게 하는지 몰라요.",en:"I don't know how to do it.",tip:"how to + 동사원형 = ~하는 방법"},
+{ko:"나는 무엇을 사야 할지 모르겠어요.",en:"I don't know what to buy.",tip:"what to + 동사원형"},
+{ko:"나는 그 영화가 재미있다고 들었어요.",en:"I heard that the movie is fun.",tip:"heard that + 문장"},
+{ko:"그는 나에게 어디에 사는지 물었어요.",en:"He asked me where I live.",tip:"간접의문문은 '의문사 + 주어 + 동사' 순서"},
+{ko:"그는 내가 가장 좋아하는 가수예요.",en:"He is my favorite singer.",tip:"favorite = 가장 좋아하는"},
+{ko:"이것이 내가 찾던 책이에요.",en:"This is the book that I was looking for.",tip:"that = 관계대명사 (~하는)"},
+{ko:"나는 노래를 잘하는 소녀를 알아요.",en:"I know a girl who sings well.",tip:"who = 사람을 꾸미는 관계대명사"},
+{ko:"우리 반에는 서른 명의 학생이 있어요.",en:"There are thirty students in my class.",tip:"There are + 복수명사"},
+{ko:"오늘은 어제보다 훨씬 더 좋아요.",en:"Today is much better than yesterday.",tip:"much + 비교급 = 훨씬 더"},
+{ko:"나는 피아노를 2년 동안 배웠어요.",en:"I have learned the piano for two years.",tip:"현재완료 = have + 과거분사, for + 기간"},
+{ko:"나는 전에 그 영화를 본 적이 있어요.",en:"I have seen the movie before.",tip:"경험을 나타내는 현재완료"},
+{ko:"나는 아직 점심을 먹지 않았어요.",en:"I haven't had lunch yet.",tip:"haven't + 과거분사 ~ yet = 아직 ~하지 않았다"},
+{ko:"무엇을 도와드릴까요?",en:"How can I help you?",tip:"가게·안내에서 쓰는 표현"},
+{ko:"다시 말씀해 주시겠어요?",en:"Could you say that again?",tip:"Could you ~? = 공손한 부탁"},
+{ko:"이것은 얼마예요?",en:"How much is this?",tip:"How much = 가격을 묻는 표현"},
+{ko:"도서관에 어떻게 가나요?",en:"How can I get to the library?",tip:"get to = ~에 도착하다"},
+{ko:"화장실을 써도 될까요?",en:"May I use the restroom?",tip:"May I ~? = 허락을 구하는 표현"},
+{ko:"잠깐만 기다려 주세요.",en:"Please wait a moment.",tip:"a moment = 잠시"},
+{ko:"늦어서 죄송합니다.",en:"I'm sorry I'm late.",tip:"사과 + 이유"},
+{ko:"도와주셔서 감사합니다.",en:"Thank you for your help.",tip:"Thank you for + 명사"},
+{ko:"무슨 뜻인지 모르겠어요.",en:"I don't understand what it means.",tip:"what it means = 그것이 의미하는 것"},
+{ko:"천천히 말씀해 주세요.",en:"Please speak slowly.",tip:"slowly = 천천히"},
+{ko:"저는 한국에서 왔어요.",en:"I'm from Korea.",tip:"be from = ~ 출신이다"},
+{ko:"창문 좀 열어 주시겠어요?",en:"Would you mind opening the window?",tip:"Would you mind + 동사ing?"},
+{ko:"저기요, 길 좀 알려 주시겠어요?",en:"Excuse me, could you give me directions?",tip:"Excuse me = 실례합니다"},
+{ko:"네가 나를 도와주면 정말 고맙겠어.",en:"I would really appreciate it if you helped me.",tip:"would + 동사원형 = 정중한 가정"},
+{ko:"나는 커서 과학자가 되고 싶어요.",en:"I want to be a scientist when I grow up.",tip:"when I grow up = 내가 자라면"},
+{ko:"늦었지만 최선을 다합시다.",en:"It's late, but let's do our best.",tip:"Let's + 동사원형 = ~하자"},
+{ko:"우리가 함께 노력하면 해낼 수 있어요.",en:"We can do it if we work together.",tip:"work together = 함께 노력하다"},
+{ko:"함께해서 즐거웠어요.",en:"I enjoyed being with you.",tip:"enjoy + 동사ing"},
+/* ── 주어 변화 드릴 : 현재완료 have / has ── */
+{ko:"나는 영어를 3년 동안 공부했어요.",en:"I have studied English for three years.",tip:"I → have + 과거분사",grp:"sub"},
+{ko:"너는 영어를 3년 동안 공부했어.",en:"You have studied English for three years.",tip:"You → have",grp:"sub"},
+{ko:"그는 영어를 3년 동안 공부했어요.",en:"He has studied English for three years.",tip:"He → has + 과거분사",grp:"sub"},
+{ko:"그녀는 영어를 3년 동안 공부했어요.",en:"She has studied English for three years.",tip:"She → has",grp:"sub"},
+{ko:"우리는 영어를 3년 동안 공부했어요.",en:"We have studied English for three years.",tip:"We → have",grp:"sub"},
+{ko:"그들은 영어를 3년 동안 공부했어요.",en:"They have studied English for three years.",tip:"They → have",grp:"sub"},
+/* ── 주어 변화 드릴 : 현재완료 (경험) ── */
+{ko:"나는 전에 그를 만난 적이 있어요.",en:"I have met him before.",tip:"have met (경험)",grp:"sub"},
+{ko:"너는 전에 그를 만난 적이 있어.",en:"You have met him before.",tip:"You → have",grp:"sub"},
+{ko:"그는 전에 그녀를 만난 적이 있어요.",en:"He has met her before.",tip:"He → has met",grp:"sub"},
+{ko:"그녀는 전에 그를 만난 적이 있어요.",en:"She has met him before.",tip:"She → has met",grp:"sub"},
+{ko:"우리는 전에 그들을 만난 적이 있어요.",en:"We have met them before.",tip:"We → have met",grp:"sub"},
+{ko:"그들은 전에 우리를 만난 적이 있어요.",en:"They have met us before.",tip:"They → have met",grp:"sub"},
+/* ── 주어 변화 드릴 : 복문 안에서의 주어 일치 ── */
+{ko:"나는 그가 친절하다고 생각해요.",en:"I think he is kind.",tip:"I think + he is",grp:"sub"},
+{ko:"너는 그것이 쉽다고 생각하니?",en:"Do you think it is easy?",tip:"Do you think + it is",grp:"sub"},
+{ko:"그는 내가 옳다고 생각해요.",en:"He thinks I am right.",tip:"He thinks + I am",grp:"sub"},
+{ko:"그녀는 우리가 늦었다고 생각해요.",en:"She thinks we are late.",tip:"She thinks + we are",grp:"sub"},
+{ko:"우리는 그들이 올 거라고 생각해요.",en:"We think they will come.",tip:"We think + they will",grp:"sub"},
+{ko:"그들은 그녀가 잘한다고 생각해요.",en:"They think she is good.",tip:"They think + she is",grp:"sub"},
+/* ── 주어 변화 드릴 : because 절의 주어·동사 일치 ── */
+{ko:"나는 아파서 쉬었어요.",en:"I rested because I was sick.",tip:"I was",grp:"sub"},
+{ko:"너는 목이 말라서 물을 마셨어.",en:"You drank water because you were thirsty.",tip:"you were",grp:"sub"},
+{ko:"그는 배가 고파서 샌드위치를 먹었어요.",en:"He ate a sandwich because he was hungry.",tip:"he was",grp:"sub"},
+{ko:"그녀는 바빠서 오지 않았어요.",en:"She didn't come because she was busy.",tip:"she was",grp:"sub"},
+{ko:"우리는 비가 와서 집에 있었어요.",en:"We stayed home because it rained.",tip:"it rained (날씨 주어 it)",grp:"sub"},
+{ko:"그들은 늦어서 뛰었어요.",en:"They ran because they were late.",tip:"they were",grp:"sub"}
+]
+};
+
+/* =============================================================================
+   이하 프로그램 로직 — 문장만 추가하실 분은 여기부터는 수정하지 않으셔도 됩니다.
+   ========================================================================== */
+(function(){
+"use strict";
+const $  = (s)=>document.querySelector(s);
+const $$ = (s)=>Array.from(document.querySelectorAll(s));
+
+/* ---------- 상태 ---------- */
+const state = {
+  level:1, dir:"ko2en", timerMin:0, scope:"all", startAt:1, teacherId:null, classId:null,
+  startIdx:0, maxIdx:0,
+  shuffle:false, tips:true, auto:false, rate:TTS.rate,
+  order:[], idx:0, revealed:false,
+  active:false, startTs:0, elapsed:0,
+  timerLeft:0, timerId:null, timerDone:false, seen:0
+};
+
+/* ---------- 화면 전환 ---------- */
+const screens = { start:$("#screen-start"), drill:$("#screen-drill"), end:$("#screen-end") };
+function show(name){
+  Object.keys(screens).forEach(k=> screens[k].hidden = (k!==name));
+  window.scrollTo(0,0);
+}
+
+/* ---------- 테마 ---------- */
+const _preset = document.documentElement.getAttribute("data-theme");
+let dark = _preset ? (_preset === "dark")
+         : !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  $$("#themeBtn,#themeBtn2,#themeBtn3").forEach(b=>{
+    b.textContent = dark ? "☀️" : "🌙";
+    b.setAttribute("aria-label", dark ? "밝은 모드로 전환" : "다크 모드로 전환");
+  });
+}
+$$("#themeBtn,#themeBtn2,#themeBtn3").forEach(b=> b.addEventListener("click", ()=>{ dark=!dark; applyTheme(); }));
+applyTheme();
+
+/* ---------- TTS ---------- */
+const synth = ("speechSynthesis" in window) ? window.speechSynthesis : null;
+let voices = [], koWarned = false;
+function loadVoices(){ if(synth) voices = synth.getVoices() || []; }
+if (synth){ loadVoices(); if (typeof synth.onvoiceschanged !== "undefined") synth.onvoiceschanged = loadVoices; }
+else {
+  const b = $("#ttsBanner");
+  b.hidden = false;
+  b.innerHTML = "🔇 <b>이 브라우저는 음성 재생(TTS)을 지원하지 않습니다.</b> 음원 없이 텍스트 드릴로 정상 사용하실 수 있습니다. (Chrome · Edge · Safari 최신 버전 권장)";
+}
+function pickVoice(lang){
+  const base = lang.slice(0,2).toLowerCase();
+  const norm = v => (v.lang||"").replace("_","-").toLowerCase();
+  return voices.find(v=> norm(v)===lang.toLowerCase())
+      || voices.find(v=> norm(v).indexOf(base)===0)
+      || null;
+}
+function hasVoice(lang){ return !!pickVoice(lang); }
+let speakingBtn = null;
+function stopSpeak(){
+  if (synth) { try{ synth.cancel(); }catch(e){} }
+  if (speakingBtn){ speakingBtn.classList.remove("speaking"); speakingBtn = null; }
+}
+function speak(text, lang, btn){
+  if (!synth || !text) return;
+  stopSpeak();
+  let useLang = lang;
+  if (lang === TTS.langKo && !hasVoice(TTS.langKo)){
+    useLang = TTS.langEn;
+    if (!koWarned){
+      koWarned = true;
+      const b = $("#ttsBanner");
+      b.hidden = false;
+      b.innerHTML = "🔊 <b>이 기기에는 한국어 음성이 설치되어 있지 않습니다.</b> 한국어 문장은 영어 음성으로 대체 재생됩니다. (기기 설정 → 음성/언어에서 한국어 음성을 추가하면 정상 재생됩니다)";
+      try{ alert("이 기기에는 한국어 음성이 없어 영어 음성으로 대체 재생합니다.\n기기 설정에서 한국어 음성을 추가하면 정상 재생됩니다."); }catch(e){}
+    }
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = useLang;
+  const v = pickVoice(useLang); if (v) u.voice = v;
+  u.rate = state.rate; u.pitch = TTS.pitch; u.volume = TTS.volume;
+  if (btn){
+    speakingBtn = btn; btn.classList.add("speaking");
+    u.onend = u.onerror = ()=>{ btn.classList.remove("speaking"); if(speakingBtn===btn) speakingBtn=null; };
+  }
+  try { synth.speak(u); } catch(e){ if(btn) btn.classList.remove("speaking"); }
+}
+
+/* ---------- 알림음 (외부 파일 없이 생성) ---------- */
+function beep(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    const ctx = new AC();
+    [0, .45, .9].forEach(t=>{
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 784;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.34);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.36);
+    });
+    setTimeout(()=>{ try{ctx.close();}catch(e){} }, 2000);
+  }catch(e){}
+}
+
+/* ---------- 모달 ---------- */
+let modalYes = null, lastFocus = null;
+function openModal(title, desc, yesText, onYes, input){
+  $("#cfTitle").textContent = title;
+  $("#cfDesc").textContent = desc;
+  $("#cfYes").textContent = yesText;
+  $("#cfNo").textContent = "취소";
+  const wrap = $("#cfInputWrap"), inp = $("#cfInput");
+  if (input){
+    wrap.hidden = false;
+    inp.type = input.type || "text";
+    inp.value = input.value != null ? input.value : "";
+    if (input.min != null) inp.min = input.min; else inp.removeAttribute("min");
+    if (input.max != null) inp.max = input.max; else inp.removeAttribute("max");
+    inp.placeholder = input.placeholder || "";
+    inp.setAttribute("aria-label", title);
+  } else { wrap.hidden = true; }
+  modalYes = onYes;
+  lastFocus = document.activeElement;
+  $("#confirmBg").hidden = false;
+  setTimeout(()=>{ (input ? inp : $("#cfYes")).focus(); if(input) inp.select(); }, 30);
+}
+function closeModal(){ $("#confirmBg").hidden = true; $("#cfInputWrap").hidden = true; modalYes = null; if(lastFocus && lastFocus.focus) lastFocus.focus(); }
+function submitModal(){ const f = modalYes; const v = $("#cfInput").value; closeModal(); if (f) f(v); }
+$("#cfNo").addEventListener("click", closeModal);
+$("#cfYes").addEventListener("click", submitModal);
+$("#cfInput").addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ e.preventDefault(); submitModal(); } });
+$("#confirmBg").addEventListener("click", (e)=>{ if(e.target === $("#confirmBg")) closeModal(); });
+
+/* ---------- 진도 저장소 (이 브라우저에만 저장 · 학생 정보 없음) ---------- */
+/* 구조: TEACHERS = [ { id, name, classes:[ { id, name, level, dir, scope, next } ] } ] */
+const STORE_KEY = "wgTransDrill.teachers.v1";
+const OLD_KEY   = "wgTransDrill.classes.v1";   /* 예전 버전(반만 있던 구조) 자동 이전용 */
+let storeOK = true;
+function loadTeachers(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw){
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }
+    /* 예전 구조가 남아 있으면 "이전 반 목록" 강사로 옮겨 줍니다 */
+    const oldRaw = localStorage.getItem(OLD_KEY);
+    if (oldRaw){
+      const olds = JSON.parse(oldRaw);
+      if (Array.isArray(olds) && olds.length){
+        return [{ id:"t-legacy", name:"이전 반 목록", classes:olds }];
+      }
+    }
+    return [];
+  }catch(e){ storeOK = false; return []; }
+}
+function saveTeachers(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(TEACHERS)); storeOK = true; }
+  catch(e){ storeOK = false; }
+}
+let TEACHERS = loadTeachers();
+function findTeacher(id){ return TEACHERS.find(t=> t.id === id) || null; }
+function findClass(id){
+  const t = findTeacher(state.teacherId);
+  if (t) { const c = (t.classes||[]).find(x=> x.id === id); if (c) return c; }
+  for (const tt of TEACHERS){ const c = (tt.classes||[]).find(x=> x.id === id); if (c) return c; }
+  return null;
+}
+
+/* ---------- 연습 범위 ---------- */
+const SCOPES = [
+  { key:"all",  label:"전체 문장",        en:"All Sentences",       short:"전체",      hint:"기본 문장 + 주어 변화 드릴을 모두 연습합니다. · Core sentences + subject-change drills" },
+  { key:"base", label:"기본 문장만",      en:"Core Sentences Only", short:"기본 문장", hint:"급수별 기본 표현만 연습합니다. (주어 변화 세트 제외) · Level expressions only" },
+  { key:"sub",  label:"주어 변화 드릴만", en:"Subject-Change Drill", short:"주어 변화", hint:"같은 문장을 I / You / He / She / We / They 로 바꿔 가며 동사 변화를 집중 연습합니다. · Same sentence across all subjects" }
+];
+function inScope(item){
+  if (state.scope === "all") return true;
+  if (state.scope === "sub")  return item.grp === "sub";
+  return item.grp !== "sub";
+}
+function countFor(lv, scope){
+  const a = DRILL_DATA[String(lv)] || [];
+  if (scope === "all") return a.length;
+  if (scope === "sub") return a.filter(x=> x.grp === "sub").length;
+  return a.filter(x=> x.grp !== "sub").length;
+}
+
+/* ---------- 시작 화면 구성 ---------- */
+const grid = $("#levelGrid");
+LEVEL_META.forEach(m=>{
+  const n = (DRILL_DATA[String(m.lv)] || []).length;
+  const b = document.createElement("button");
+  b.className = "level-card"; b.type = "button";
+  b.style.setProperty("--lvc", m.color);
+  b.setAttribute("aria-pressed", m.lv === state.level ? "true" : "false");
+  b.setAttribute("aria-label", m.name + ", " + m.desc + ", " + n + "문장");
+  b.dataset.lv = m.lv;
+  b.innerHTML =
+    '<span class="lv-badge" style="background:'+m.color+'">'+m.lv+'급</span>' +
+    '<span class="lv-name">'+m.name.split(" · ")[1]+'</span>' +
+    '<span class="lv-desc">'+m.desc+'</span>' +
+    '<span class="lv-count" data-count="'+m.lv+'">'+n+' 문장</span>';
+  b.addEventListener("click", ()=> selectLevel(m.lv));
+  grid.appendChild(b);
+});
+const scopeRow = $("#scopeRow");
+SCOPES.forEach(sc=>{
+  const b = document.createElement("button");
+  b.className = "chip bi"; b.type="button"; b.setAttribute("role","radio");
+  b.setAttribute("aria-checked", state.scope === sc.key ? "true":"false");
+  b.dataset.scope = sc.key;
+  b.innerHTML = '<span>' + sc.label + '</span><span class="en">' + sc.en + '</span>';
+  b.setAttribute("aria-label", sc.label + " " + sc.en);
+  b.addEventListener("click", ()=>{
+    state.scope = sc.key;
+    $$("#scopeRow .chip").forEach(c=> c.setAttribute("aria-checked", c.dataset.scope===sc.key ? "true":"false"));
+    paintCounts();
+  });
+  scopeRow.appendChild(b);
+});
+function paintCounts(){
+  const sc = SCOPES.find(x=>x.key===state.scope);
+  $("#scopeHint").textContent = sc ? sc.hint : "";
+  $$("#levelGrid .lv-count").forEach(el=>{
+    const lv = Number(el.dataset.count);
+    el.textContent = countFor(lv, state.scope) + " 문장";
+  });
+  $$("#levelGrid .level-card").forEach(c=>{
+    const lv = Number(c.dataset.lv);
+    const meta = LEVEL_META.find(m=>m.lv===lv);
+    c.setAttribute("aria-label", meta.name + ", " + meta.desc + ", " + countFor(lv, state.scope) + "문장");
+  });
+  paintStartNo();
+}
+paintCounts();
+
+function paintLevels(){
+  $$("#levelGrid .level-card").forEach(c=>
+    c.setAttribute("aria-pressed", Number(c.dataset.lv) === state.level ? "true":"false"));
+  paintStartNo();
+}
+function selectLevel(lv){
+  if (state.active && lv !== state.level){
+    openModal("급수를 변경할까요?", state.level+"급 진행 상황(" + (state.idx+1) + "/" + state.order.length + ")과 타이머가 초기화됩니다.", "네, 변경",
+      ()=>{ resetSession(); state.level = lv; paintLevels(); });
+    return;
+  }
+  state.level = lv; paintLevels();
+}
+
+/* 타이머 프리셋 버튼 */
+const timerRow = $("#timerRow");
+function addTimerChip(min, label, en){
+  const b = document.createElement("button");
+  b.className = "chip bi"; b.type="button"; b.setAttribute("role","radio");
+  b.setAttribute("aria-checked", state.timerMin === min ? "true":"false");
+  b.dataset.min = min;
+  b.innerHTML = '<span>' + label + '</span><span class="en">' + en + '</span>';
+  b.setAttribute("aria-label", label + " " + en);
+  b.addEventListener("click", ()=>{
+    state.timerMin = min;
+    $$("#timerRow .chip").forEach(c=> c.setAttribute("aria-checked", Number(c.dataset.min)===min ? "true":"false"));
+  });
+  timerRow.appendChild(b);
+}
+addTimerChip(0, "⏱ 타이머 없음", "No Timer");
+TIMER_PRESETS.forEach(m=> addTimerChip(m, "⏱ " + m + "분 세션", m + "-min Session"));
+
+/* 방향 선택 */
+$$(".chip[data-dir]").forEach(c=> c.addEventListener("click", ()=>{
+  state.dir = c.dataset.dir;
+  $$(".chip[data-dir]").forEach(x=> x.setAttribute("aria-checked", x===c ? "true":"false"));
+}));
+
+/* 토글 스위치 */
+function bindSwitch(sel, key){
+  const el = $(sel);
+  el.setAttribute("aria-pressed", state[key] ? "true":"false");
+  el.addEventListener("click", ()=>{
+    state[key] = !state[key];
+    el.setAttribute("aria-pressed", state[key] ? "true":"false");
+    if (key === "tips") { $("#tipBtn").setAttribute("aria-pressed", state.tips?"true":"false"); renderTip(); }
+    if (key === "shuffle"){ if (state.shuffle) state.startAt = 1; paintStartNo(); }
+  });
+}
+bindSwitch("#shuffleSw","shuffle"); bindSwitch("#tipSw","tips"); bindSwitch("#autoSw","auto");
+
+/* 속도 슬라이더 */
+$("#rate").value = String(state.rate);
+$("#rateVal").textContent = Number(state.rate).toFixed(2) + "×";
+$("#rate").addEventListener("input", e=>{
+  state.rate = Number(e.target.value);
+  $("#rateVal").textContent = state.rate.toFixed(2) + "×";
+  e.target.setAttribute("aria-valuenow", state.rate.toFixed(2));
+});
+
+$("#previewBtn").addEventListener("click", ()=>{
+  if (state.dir === "ko2en") speak("안녕하세요. 오늘도 즐겁게 공부해요.", TTS.langKo, $("#previewBtn"));
+  else speak("Hello. Let's have a great English class today.", TTS.langEn, $("#previewBtn"));
+});
+
+/* ---------- 시작 문장 번호 ---------- */
+function maxCount(){ return Math.max(1, countFor(state.level, state.scope)); }
+function clampStart(){
+  const m = maxCount();
+  let v = parseInt(state.startAt, 10);
+  if (isNaN(v) || v < 1) v = 1;
+  if (v > m) v = m;
+  state.startAt = v;
+}
+function paintStartNo(){
+  clampStart();
+  const m = maxCount();
+  const inp = $("#startNo");
+  if (!inp) return;
+  inp.value = String(state.startAt);
+  inp.max = String(m);
+  $("#startNoMax").textContent = "/ " + m;
+  $("#startNoReset").disabled = (state.startAt === 1);
+  $("#startNoHint").innerHTML = state.shuffle
+    ? "⚠️ <b>셔플이 켜져 있어 1번부터 무작위로 진행</b>합니다. 시작 번호를 쓰려면 셔플을 꺼 주세요."
+    : "지난 시간에 20번까지 했다면 <b>21</b>을 입력하세요. 드릴 중에도 상단 번호를 눌러 이동할 수 있습니다.";
+}
+function setStartNo(v){
+  state.startAt = v;
+  if (state.shuffle && v > 1){
+    state.shuffle = false;
+    $("#shuffleSw").setAttribute("aria-pressed","false");
+  }
+  paintStartNo();
+}
+$("#startNo").addEventListener("input", e=> setStartNo(parseInt(e.target.value,10)));
+$("#startNo").addEventListener("blur", ()=> paintStartNo());
+$("#startNoMinus").addEventListener("click", ()=> setStartNo(state.startAt - 1));
+$("#startNoPlus").addEventListener("click",  ()=> setStartNo(state.startAt + 1));
+$("#startNoReset").addEventListener("click", ()=> setStartNo(1));
+
+/* ---------- 강사 · 반 관리 ---------- */
+function progressText(c){
+  const sc = SCOPES.find(x=>x.key===c.scope);
+  return c.level + "급 · " + (c.dir === "ko2en" ? "한→영" : "영→한")
+       + (c.scope === "all" ? "" : " · " + (sc ? sc.short : ""))
+       + " · 다음 " + c.next + "번";
+}
+function makeCard(opts){
+  /* opts: {name, sub, selected, caret, onPick, onDelete, delLabel} */
+  const card = document.createElement("div");
+  card.className = "class-card";
+  card.dataset.sel = opts.selected ? "true" : "false";
+  const main = document.createElement("button");
+  main.type = "button"; main.className = "cc-main";
+  main.setAttribute("aria-pressed", opts.selected ? "true" : "false");
+  const cn = document.createElement("span"); cn.className = "cn";
+  cn.textContent = opts.name;
+  if (opts.caret){
+    const car = document.createElement("span"); car.className = "caret";
+    car.textContent = opts.selected ? " ▾" : " ▸";
+    cn.appendChild(car);
+  }
+  const cp = document.createElement("span"); cp.className = "cp"; cp.textContent = opts.sub;
+  main.appendChild(cn); main.appendChild(cp);
+  main.addEventListener("click", opts.onPick);
+  const del = document.createElement("button");
+  del.type = "button"; del.className = "cc-del"; del.textContent = "✕";
+  del.setAttribute("aria-label", opts.delLabel);
+  del.addEventListener("click", opts.onDelete);
+  card.appendChild(main); card.appendChild(del);
+  return card;
+}
+function addBtn(label, fn){
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "class-add"; b.textContent = label;
+  b.addEventListener("click", fn);
+  return b;
+}
+function paintClassHint(){
+  const el = $("#classHint");
+  if (!storeOK){
+    el.innerHTML = "⚠️ 이 브라우저에서는 진도 자동 저장이 되지 않습니다. 아래 <b>시작 문장 번호</b>를 직접 입력해 주세요.";
+    return;
+  }
+  const c = state.classId ? findClass(state.classId) : null;
+  const t = state.teacherId ? findTeacher(state.teacherId) : null;
+  if (c && t){
+    el.innerHTML = "<b>" + t.name + " · " + c.name + "</b> 선택됨 — 드릴을 마치거나 종료하면 진도가 자동 저장됩니다.";
+  } else if (t){
+    el.textContent = t.name + " 선생님의 반을 고르세요. 반을 고르지 않으면 진도를 저장하지 않습니다.";
+  } else if (!TEACHERS.length){
+    el.textContent = "강사 이름을 등록하고 그 아래에 담당 반을 추가하세요. 진도는 이 컴퓨터에만 저장되며 학생 정보는 저장하지 않습니다.";
+  } else {
+    el.textContent = "강사를 누르면 담당 반 목록이 아래에 펼쳐집니다.";
+  }
+}
+function renderClasses(){
+  /* 강사 줄 */
+  const trow = $("#teacherRow");
+  trow.innerHTML = "";
+  TEACHERS.forEach(t=>{
+    const n = (t.classes || []).length;
+    trow.appendChild(makeCard({
+      name: t.name,
+      sub: n ? ("담당 반 " + n + "개") : "반 없음 — 눌러서 추가",
+      selected: state.teacherId === t.id,
+      caret: true,
+      delLabel: t.name + " 강사 삭제",
+      onPick: ()=> selectTeacher(t.id),
+      onDelete: ()=> openModal("강사를 삭제할까요?",
+        "'" + t.name + "' 강사와 그 아래 반 " + n + "개의 진도가 모두 지워집니다.", "네, 삭제", ()=>{
+          TEACHERS = TEACHERS.filter(x=> x.id !== t.id);
+          saveTeachers();
+          if (state.teacherId === t.id){ state.teacherId = null; state.classId = null; }
+          renderClasses();
+        })
+    }));
+  });
+  trow.appendChild(addBtn("+ 강사 추가", addTeacher));
+
+  /* 선택된 강사의 반 목록 */
+  const panel = $("#classPanel"), crow = $("#classRow");
+  const t = state.teacherId ? findTeacher(state.teacherId) : null;
+  if (!t){ panel.hidden = true; crow.innerHTML = ""; paintClassHint(); return; }
+  panel.hidden = false;
+  $("#tpName").textContent = t.name + " 선생님 담당 반";
+  crow.innerHTML = "";
+  (t.classes || []).forEach(c=>{
+    crow.appendChild(makeCard({
+      name: c.name,
+      sub: progressText(c),
+      selected: state.classId === c.id,
+      caret: false,
+      delLabel: c.name + " 반 삭제",
+      onPick: ()=> selectClass(c.id),
+      onDelete: ()=> openModal("반을 삭제할까요?",
+        "'" + c.name + "' 반과 저장된 진도가 지워집니다.", "네, 삭제", ()=>{
+          t.classes = t.classes.filter(x=> x.id !== c.id);
+          saveTeachers();
+          if (state.classId === c.id) state.classId = null;
+          renderClasses();
+        })
+    }));
+  });
+  crow.appendChild(addBtn("+ 반 추가", addClass));
+  paintClassHint();
+}
+function selectTeacher(id){
+  if (state.teacherId === id){ state.teacherId = null; state.classId = null; renderClasses(); return; }
+  state.teacherId = id; state.classId = null;
+  renderClasses();
+}
+function selectClass(id){
+  if (state.classId === id){ state.classId = null; renderClasses(); return; }
+  const c = findClass(id); if (!c) return;
+  state.classId = id;
+  state.level = c.level; state.dir = c.dir; state.scope = c.scope;
+  state.shuffle = false; $("#shuffleSw").setAttribute("aria-pressed","false");
+  $$(".chip[data-dir]").forEach(x=> x.setAttribute("aria-checked", x.dataset.dir === state.dir ? "true":"false"));
+  $$("#scopeRow .chip").forEach(x=> x.setAttribute("aria-checked", x.dataset.scope === state.scope ? "true":"false"));
+  paintLevels(); paintCounts();
+  state.startAt = c.next; paintStartNo();
+  renderClasses();
+}
+function addTeacher(){
+  openModal("강사 추가", "강사 이름을 입력하세요. 예: 김민지, Peter", "추가", (v)=>{
+    const name = (v || "").trim();
+    if (!name) return;
+    const t = { id:"t" + Date.now().toString(36), name:name.slice(0,20), classes:[] };
+    TEACHERS.push(t); saveTeachers();
+    state.teacherId = t.id; state.classId = null;
+    renderClasses();
+  }, { type:"text", value:"", placeholder:"강사 이름" });
+}
+function addClass(){
+  const t = findTeacher(state.teacherId); if (!t) return;
+  openModal("반 추가", t.name + " 선생님의 반 이름을 입력하세요. 예: 초3A, 월수 5시반", "추가", (v)=>{
+    const name = (v || "").trim();
+    if (!name) return;
+    const c = { id:"c" + Date.now().toString(36), name:name.slice(0,20),
+                level:state.level, dir:state.dir, scope:state.scope, next:state.startAt };
+    t.classes = t.classes || [];
+    t.classes.push(c); saveTeachers();
+    state.classId = c.id;
+    renderClasses();
+  }, { type:"text", value:"", placeholder:"반 이름" });
+}
+function nextNumber(){
+  const total = state.order.length || 1;
+  const n = state.maxIdx + 2;
+  return n > total ? 1 : n;
+}
+function saveProgress(){
+  if (!state.classId) return null;
+  const c = findClass(state.classId); if (!c) return null;
+  c.level = state.level; c.dir = state.dir; c.scope = state.scope;
+  if (!state.shuffle) c.next = nextNumber();
+  saveTeachers();
+  const t = findTeacher(state.teacherId);
+  return { name: (t ? t.name + " · " : "") + c.name };
+}
+renderClasses();
+
+/* ---------- 세션 시작 ---------- */
+function buildOrder(){
+  const set = DRILL_DATA[String(state.level)] || [];
+  const arr = [];
+  set.forEach((item,i)=>{ if (inScope(item)) arr.push(i); });
+  if (state.shuffle){
+    for (let i=arr.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t = arr[i]; arr[i]=arr[j]; arr[j]=t;
+    }
+  }
+  return arr;
+}
+function startSession(){
+  state.order = buildOrder();
+  if (!state.order.length){ try{alert("선택한 급수·연습 범위에 해당하는 문장이 없습니다.");}catch(e){} return; }
+  clampStart();
+  state.startIdx = state.shuffle ? 0 : Math.min(state.startAt - 1, state.order.length - 1);
+  state.idx = state.startIdx; state.maxIdx = state.idx;
+  state.revealed = false; state.seen = 1;
+  state.active = true; state.startTs = Date.now(); state.elapsed = 0;
+  state.timerDone = false;
+  const meta = LEVEL_META.find(m=>m.lv===state.level);
+  $("#lvBadge").textContent = state.level + "급";
+  $("#lvBadge").style.background = meta ? meta.color : "var(--blue)";
+  const sc = SCOPES.find(x=>x.key===state.scope);
+  $("#dirBadge").textContent = (state.dir === "ko2en" ? "한국어 → 영어" : "영어 → 한국어")
+      + (state.scope === "all" ? "" : " · " + sc.short);
+  $("#tipBtn").setAttribute("aria-pressed", state.tips ? "true":"false");
+  setupTimer();
+  show("drill");
+  render();
+  setTimeout(()=> $("#revealBtn").focus(), 50);
+}
+function resetSession(){
+  state.active = false; state.idx = 0; state.revealed = false;
+  clearTimer(); stopSpeak();
+}
+
+/* ---------- 타이머 ---------- */
+function clearTimer(){ if (state.timerId){ clearInterval(state.timerId); state.timerId=null; } }
+function fmt(sec){
+  sec = Math.max(0, Math.round(sec));
+  const m = Math.floor(sec/60), s = sec%60;
+  return m + ":" + (s<10?"0":"") + s;
+}
+function setupTimer(){
+  clearTimer();
+  const box = $("#timerBox");
+  if (!state.timerMin){ box.hidden = true; return; }
+  box.hidden = false; box.classList.remove("low");
+  state.timerLeft = state.timerMin * 60;
+  box.textContent = fmt(state.timerLeft);
+  state.timerId = setInterval(()=>{
+    state.timerLeft--;
+    box.textContent = fmt(state.timerLeft);
+    if (state.timerLeft <= 60) box.classList.add("low");
+    if (state.timerLeft <= 0){
+      clearTimer(); state.timerDone = true;
+      box.textContent = "0:00";
+      beep();
+      openModal("⏰ 세션 시간이 끝났습니다", state.timerMin + "분 세션이 종료되었습니다. 결과를 확인하거나, 시간을 연장해 계속 진행할 수 있습니다.", "결과 보기",
+        ()=> finish());
+      $("#cfNo").textContent = "계속하기";
+    }
+  }, 1000);
+}
+
+/* ---------- 렌더링 ---------- */
+function current(){
+  const set = DRILL_DATA[String(state.level)] || [];
+  return set[state.order[state.idx]] || {ko:"",en:"",tip:""};
+}
+function promptText(){ const c = current(); return state.dir === "ko2en" ? c.ko : c.en; }
+function answerText(){ const c = current(); return state.dir === "ko2en" ? c.en : c.ko; }
+function promptLang(){ return state.dir === "ko2en" ? TTS.langKo : TTS.langEn; }
+function answerLang(){ return state.dir === "ko2en" ? TTS.langEn : TTS.langKo; }
+
+function render(){
+  const total = state.order.length;
+  const qt = $("#qText");
+  qt.classList.add("fading");
+  setTimeout(()=>{
+    qt.textContent = promptText();
+    qt.className = "q-text" + (state.dir === "en2ko" ? " en" : "");
+  }, 120);
+  $("#qLabel").textContent = state.dir === "ko2en"
+      ? "문제 · 한국어 → 영어로 말해 보세요"
+      : "문제 · English → 한국어로 말해 보세요";
+  $("#counter").textContent = (state.idx+1) + " / " + total;
+  const pct = Math.round(((state.idx+1)/total)*100);
+  $("#progBar").querySelector("i").style.width = pct + "%";
+  $("#progBar").setAttribute("aria-valuenow", String(pct));
+  $("#prevBtn").disabled = (state.idx === 0);
+  hideAnswer();
+  if (state.idx > state.maxIdx) state.maxIdx = state.idx;
+  state.seen = state.maxIdx - state.startIdx + 1;
+  if (state.auto) setTimeout(()=> speak(promptText(), promptLang(), $("#speakBtn")), 200);
+}
+
+/* 정답은 공개 전까지 DOM에 아예 존재하지 않습니다 (개발자 도구로도 볼 수 없음) */
+function hideAnswer(){
+  state.revealed = false;
+  const slot = $("#answerSlot");
+  slot.innerHTML =
+    '<div class="a-hidden-note" id="hiddenNote"><span aria-hidden="true">🔒</span>' +
+    '<span>정답은 숨겨져 있습니다 — <b>정답 공개</b> 버튼 또는 <kbd>Enter</kbd></span></div>';
+  $("#revealBtn").textContent = "👀 정답 공개";
+  $("#revealBtn").setAttribute("aria-label","정답 공개 (단축키 Enter)");
+}
+function revealAnswer(){
+  state.revealed = true;
+  const c = current();
+  const slot = $("#answerSlot");
+  const box = document.createElement("div");
+  box.className = "a-box";
+  const lab = document.createElement("div");
+  lab.className = "a-label"; lab.textContent = "정답";
+  const p = document.createElement("p");
+  p.className = "a-text" + (state.dir === "ko2en" ? " en" : "");
+  p.textContent = answerText();
+  p.setAttribute("aria-live","polite");
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;margin-top:6px";
+  const ab = document.createElement("button");
+  ab.className = "btn btn-ghost speak-btn"; ab.type = "button";
+  ab.setAttribute("aria-label","정답 문장 음원 재생");
+  ab.innerHTML = '<span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span> 정답 음원';
+  ab.addEventListener("click", ()=> speak(answerText(), answerLang(), ab));
+  row.appendChild(ab);
+  box.appendChild(lab); box.appendChild(p); box.appendChild(row);
+  if (state.tips && c.tip){
+    const t = document.createElement("div");
+    t.className = "tip"; t.id = "tipBox";
+    t.innerHTML = "<b>💡 문법 포인트</b> · " + c.tip;
+    box.appendChild(t);
+  }
+  slot.innerHTML = "";
+  slot.appendChild(box);
+  $("#revealBtn").textContent = "🙈 정답 숨기기";
+  $("#revealBtn").setAttribute("aria-label","정답 숨기기 (단축키 Enter)");
+}
+function toggleAnswer(){ state.revealed ? hideAnswer() : revealAnswer(); }
+function renderTip(){
+  if (!state.revealed) return;
+  revealAnswer();
+}
+
+/* ---------- 이동 ---------- */
+function next(){
+  stopSpeak();
+  if (state.idx >= state.order.length - 1){ finish(); return; }
+  state.idx++; render();
+}
+function prev(){
+  stopSpeak();
+  if (state.idx === 0) return;
+  state.idx--; render();
+}
+function finish(){
+  clearTimer(); stopSpeak();
+  state.elapsed = Math.round((Date.now() - state.startTs)/1000);
+  state.active = false;
+  const meta = LEVEL_META.find(m=>m.lv===state.level);
+  const nextNo = nextNumber();
+  const saved = saveProgress();
+  $("#statNext").textContent = state.shuffle ? "—" : String(nextNo);
+  $("#saveNote").innerHTML = state.shuffle
+    ? "셔플로 진행해서 시작 번호는 저장하지 않았습니다."
+    : (saved
+        ? "✅ <b>" + saved.name + "</b> 반 진도를 저장했습니다. 다음 시간에 이 반을 고르면 <b>" + nextNo + "번</b>부터 바로 시작합니다."
+        : (nextNo === 1
+            ? "이 급수를 한 바퀴 다 돌았습니다. 다음 시간에는 1번부터 시작하세요."
+            : "다음 시간에 시작 화면에서 <b>" + nextNo + "</b>을 입력하면 이어서 진행합니다. (반을 등록해 두면 자동으로 기억합니다)"));
+  $("#statCount").textContent = String(state.seen);
+  $("#statTime").textContent  = fmt(state.elapsed);
+  $("#statLevel").textContent = state.level + "급";
+  $("#endTitle").textContent = state.timerDone ? "세션 시간 종료! 수고했어요 🎉" : "오늘의 드릴 완료! 🎉";
+  $("#endSub").textContent = (meta ? meta.name : "") + " · " +
+      (state.dir==="ko2en" ? "한국어 → 영어" : "영어 → 한국어") + " 드릴을 마쳤습니다.";
+  if (!state.shuffle) { state.startAt = nextNo; paintStartNo(); }
+  renderClasses();
+  show("end");
+  setTimeout(()=> $("#resultBox").focus(), 50);   /* 버튼에 포커스를 주지 않음 — Space 연타로 재시작되는 것을 방지 */
+}
+
+/* ---------- 버튼 연결 ---------- */
+$("#startBtn").addEventListener("click", startSession);
+$("#speakBtn").addEventListener("click", ()=> speak(promptText(), promptLang(), $("#speakBtn")));
+$("#revealBtn").addEventListener("click", toggleAnswer);
+$("#nextBtn").addEventListener("click", next);
+$("#prevBtn").addEventListener("click", prev);
+$("#tipBtn").addEventListener("click", ()=>{
+  state.tips = !state.tips;
+  $("#tipBtn").setAttribute("aria-pressed", state.tips ? "true":"false");
+  $("#tipSw").setAttribute("aria-pressed", state.tips ? "true":"false");
+  renderTip();
+});
+function exitToStart(){
+  const saved = saveProgress();
+  if (!state.shuffle){ state.startAt = nextNumber(); }
+  resetSession();
+  paintStartNo(); renderClasses();
+  show("start");
+  return saved;
+}
+function askExit(){
+  if (!state.active || state.idx === state.startIdx){ resetSession(); show("start"); return; }
+  const c = state.classId ? findClass(state.classId) : null;
+  openModal("여기서 수업을 마칠까요?",
+    (c ? "'" + c.name + "' 반 진도를 " + nextNumber() + "번으로 저장하고 시작 화면으로 돌아갑니다."
+       : "다음 시작 번호(" + nextNumber() + "번)를 시작 화면에 넣어 두고 돌아갑니다. 타이머는 초기화됩니다."),
+    "네, 저장하고 나가기", ()=>{ exitToStart(); });
+}
+$("#exitBtn").addEventListener("click", askExit);
+$("#counter").addEventListener("click", ()=>{
+  const total = state.order.length;
+  openModal("문장 번호로 이동", "1 ~ " + total + " 사이의 번호를 입력하세요.", "이동", (v)=>{
+    let n = parseInt(v, 10);
+    if (isNaN(n)) return;
+    n = Math.min(Math.max(1, n), total);
+    stopSpeak(); state.idx = n - 1; render();
+  }, { type:"number", value:String(state.idx+1), min:1, max:total });
+});
+$("#lvBadge").addEventListener("click", ()=>{
+  if (!state.active || state.idx === state.startIdx){ resetSession(); show("start"); return; }
+  openModal("급수를 변경할까요?",
+    "지금까지의 진행 상황(" + (state.idx+1) + "/" + state.order.length + ")을 저장하고 급수 선택 화면으로 돌아갑니다.",
+    "네, 변경하기", ()=>{ exitToStart(); });
+});
+
+$("#againBtn").addEventListener("click", ()=>{ state.shuffle = true; $("#shuffleSw").setAttribute("aria-pressed","true"); startSession(); });
+$("#flipBtn").addEventListener("click", ()=>{
+  state.dir = (state.dir === "ko2en") ? "en2ko" : "ko2en";
+  $$(".chip[data-dir]").forEach(x=> x.setAttribute("aria-checked", x.dataset.dir===state.dir ? "true":"false"));
+  startSession();
+});
+$("#homeBtn").addEventListener("click", ()=>{ resetSession(); show("start"); });
+
+/* ---------- 키보드 단축키 ---------- */
+document.addEventListener("keydown", (e)=>{
+  const modalOpen = !$("#confirmBg").hidden;
+  if (modalOpen){
+    if (e.key === "Escape"){ e.preventDefault(); closeModal(); }
+    return;
+  }
+  if (screens.drill.hidden){
+    if (e.key === "Enter" && !screens.start.hidden && document.activeElement === document.body){
+      e.preventDefault(); startSession();
+    }
+    return;
+  }
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+  switch (e.key){
+    case " ": case "Spacebar":
+      e.preventDefault(); next(); break;
+    case "Enter":
+      e.preventDefault(); toggleAnswer(); break;
+    case "ArrowRight":
+      e.preventDefault(); next(); break;
+    case "ArrowLeft":
+      e.preventDefault(); prev(); break;
+    case "Escape":
+      e.preventDefault(); askExit(); break;
+    default:
+      if (e.key === "r" || e.key === "R" || e.key === "ㄱ"){
+        e.preventDefault(); speak(promptText(), promptLang(), $("#speakBtn"));
+      } else if (e.key === "t" || e.key === "T" || e.key === "ㅅ"){
+        e.preventDefault(); $("#tipBtn").click();
+      }
+  }
+}, false);
+
+window.addEventListener("beforeunload", ()=> stopSpeak());
+})();
+</script>
+</body>
+</html>
